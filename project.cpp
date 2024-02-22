@@ -29,9 +29,9 @@ vector<StateProps> readStatesFromFile(const string& filename) {
             istringstream iss(line);
             string token;
             getline(iss, s.state, '-');
-            getline(iss, s.start, '-');
+            getline(iss, token, '-');
             s.start = (token == "true");
-            getline(iss, s.finish, '-');
+            getline(iss, token, '-');
             s.finish = (token == "true");
 
         // Read routes
