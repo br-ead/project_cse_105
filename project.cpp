@@ -88,7 +88,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
 }
 
 
-
+/*
 void printStates(const vector<StateProps>& states) {
     for (const auto& state : states) {
         cout << state.state << " is " << (state.start ? "" : "not ") << "a start state. ";
@@ -122,6 +122,39 @@ void printStates(const vector<StateProps>& states) {
     }
 }
 
+*/
+void printStates(const vector<StateProps>& states) {
+    for (const auto& state : states) {
+        cout << state.state << " is " << (state.start ? "" : "not ") << "a start state. ";
+        cout << "It is " << (state.finish ? "" : "not ") << "a finish state. ";
+        
+        cout << "When the input is a, it will route to ";
+        if (state.route_a.empty()) {
+            cout << "nothing";
+        } else {
+            for (size_t i = 0; i < state.route_a.size(); ++i) {
+                cout << state.route_a[i];
+                if (i != state.route_a.size() - 1) {
+                    cout << ",";
+                }
+            }
+        }
+
+        cout << ". When the input is b, it will route to ";
+        if (state.route_b.empty()) {
+            cout << "nothing";
+        } else {
+            for (size_t i = 0; i < state.route_b.size(); ++i) {
+                cout << state.route_b[i];
+                if (i != state.route_b.size() - 1) {
+                    cout << ",";
+                }
+            }
+        }
+
+        cout << "." << endl;
+    }
+}
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
