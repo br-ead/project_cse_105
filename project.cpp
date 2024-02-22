@@ -67,7 +67,7 @@ vector<string> split(const string& s, char delimiter) {
 #include <string>
 #include <vector>
 
-std::string join(const std::vector<std::string>& elements, const std::string& delimiter) {
+std::string join(const std::vector<string>& elements, const string& delimiter) {
     if (elements.empty()) {
         return "";
     }
