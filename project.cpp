@@ -62,7 +62,7 @@ void printStates(const vector<StateProps>& states) {
             cout << "nothing";
         } else {
             for (const auto& route : state.route_a) {
-                cout << route << "/";
+                cout << route << ",";
             }
         }
 
@@ -72,7 +72,7 @@ void printStates(const vector<StateProps>& states) {
             cout << "nothing";
         } else {
             for (const auto& route : state.route_b) {
-                cout << route << "/";
+                cout << route << ",";
             }
         }
 
