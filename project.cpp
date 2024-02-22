@@ -103,7 +103,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
             } else {
                 // For different states, 'a' transitions to itself and 'b' follows the NFA transitions
                 newState.route_a.push_back(qA.state);
-                newState.route_b = qB.route_b;
+                newState.route_b.push_back(qB.state);
             }
 
             // Add the new state to the DFA if not processed already
