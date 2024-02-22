@@ -66,7 +66,7 @@ void printStates(const vector<StateProps>& states) {
             }
         }
 
-        court << " and when the input is b, it will route to ";
+        cout << " and when the input is b, it will route to ";
         
         if (state.route_b.empty()) {
             cout << "nothing";
