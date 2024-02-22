@@ -83,11 +83,10 @@ int main(int argc, char *argv[]) {
     }
 
     string filename = argv[1];
+
+
     vector<StateProps> nfa = readStatesFromFile(filename);
     cout << "Read " << nfa.size() << " states from the file." << endl;
-
-
-    vector<StateProps> nfa = readStatesFromFile(filename);
     printStates(nfa);
 
     return 0;
