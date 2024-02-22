@@ -55,7 +55,7 @@ vector<StateProps> readStatesFromFile(const string& filename) {
 
 void printStates(const vector<StateProps>& states) {
     for (const auto& state : states) {
-        cout << "State " << state.state << " is " << (state.start ? "" : "not ") << "a start state. ";
+        cout << state.state << " is " << (state.start ? "" : "not ") << "a start state. ";
         cout << "It is " << (state.finish ? "" : "not ") << "a finish state. When the input is a, it will route to ";
         
         if (state.route_a.empty()) {
