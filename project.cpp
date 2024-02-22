@@ -56,55 +56,31 @@ vector<StateProps> readStatesFromFile(const string& filename) {
 }
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
-    set<vector<string>> processedRoutes;
 
-    // Process each state in the NFA
-    for (const auto& qA : nfa) {
-        for (const auto& qB : nfa) {
-            // Combine states qA and qB into a new state
-            StateProps newState;
-            newState.state = "l" + qA.state + "," + qB.state + "l";
-            newState.start = qA.start || qB.start;
-            newState.finish = qA.finish || qB.finish;
+    // Generate all possible combinations of states
+    for (int i = 0; i < (1 << nfa.size()); i++) {
+        StateProps newState;
 
-            // Merge routes for input 'a'
-            for (const auto& routeA : qA.route_a) {
-                for (const auto& routeB : qB.route_a) {
-                    vector<string> mergedRoute = { routeA, routeB };
-                    sort(mergedRoute.begin(), mergedRoute.end());
-                    processedRoutes.insert(mergedRoute);
-                }
+        // For each bit set in the combination, add the corresponding state to the new state
+        for (int j = 0; j < nfa.size(); j++) {
+            if (i & (1 << j)) {
+                newState.state += nfa[j].state + ",";
+                newState.start |= nfa[j].start;
+                newState.finish |= nfa[j].finish;
+
+                // Merge the routes of the current state into the new state
+                newState.route_a.insert(newState.route_a.end(), nfa[j].route_a.begin(), nfa[j].route_a.end());
+                newState.route_b.insert(newState.route_b.end(), nfa[j].route_b.begin(), nfa[j].route_b.end());
             }
-
-            // Merge routes for input 'b'
-            for (const auto& routeA : qA.route_b) {
-                for (const auto& routeB : qB.route_b) {
-                    vector<string> mergedRoute = { routeA, routeB };
-                    sort(mergedRoute.begin(), mergedRoute.end());
-                    processedRoutes.insert(mergedRoute);
-                }
-            }
-
-            // Update the new state's routes
-            for (const auto& route : processedRoutes) {
-                if (route.size() == 2) {
-                    newState.route_a.push_back(route[0]);
-                    newState.route_b.push_back(route[1]);
-                }
-            }
-
-            // Add the new state to the DFA if not processed already
-            if (!newState.route_a.empty() || !newState.route_b.empty()) {
-                dfa.push_back(newState);
-            }
-
-            // Clear processed routes for next iteration
-            processedRoutes.clear();
         }
+
+        // Add the new state to the DFA
+        dfa.push_back(newState);
     }
 
     return dfa;
 }
+
 
 
 void printStates(const vector<StateProps>& states) {
