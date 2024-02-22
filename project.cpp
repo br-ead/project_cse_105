@@ -57,6 +57,22 @@ vector<StateProps> readStatesFromFile(const string& filename) {
 
     return states;
 }
+// Function to get the next states on a given input symbol
+set<string> moveOnInput(const string& state, char input, const vector<StateProps>& nfa) {
+    set<string> nextStateSet;
+    for (const auto& nfaState : nfa) {
+        if (nfaState.state == state) {
+            if (input == 'a') {
+                nextStateSet.insert(nfaState.route_a.begin(), nfaState.route_a.end());
+            } else if (input == 'b') {
+                nextStateSet.insert(nfaState.route_b.begin(), nfaState.route_b.end());
+            }
+            break;
+        }
+    }
+    return nextStateSet;
+}
+
 // Function to join states into a single string
 string joinStates(const set<string>& states) {
     string joinedState;
@@ -149,8 +165,8 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
         // Assign transitions to current DFA state
         for (auto& state : dfa) {
             if (state.state == currentState) {
-                state.route_a = joinStates(transitions('a'));
-                state.route_b = joinStates(transitions('b'));
+                state.route_a = joinStates(transitions.route_a);
+                state.route_b = joinStates(transitions.route_b);
                 break;
             }
         }
