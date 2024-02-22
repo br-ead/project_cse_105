@@ -25,14 +25,14 @@ vector<StateProps> readStatesFromFile(const string& filename) {
         cout << "Opened file: " << filename << endl;
     }
         while (getline(file, line)) {
-        StateProps s;
-        istringstream iss(line);
-        string token;
-        iss >> s.state >> token;
-        s.start = (token == "true");
-        iss >> token;
-
-        s.finish = (token == "true");
+            StateProps s;
+            istringstream iss(line);
+            string token;
+            getline(iss, s.state '-');
+            getline(iss, s.start '-');
+            s.start = (token == "true");
+            getline(iss, s.finish '-');
+            s.finish = (token == "true");
 
         // Read routes
         while (getline(iss, token, '-')) {
