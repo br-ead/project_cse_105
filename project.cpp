@@ -20,7 +20,9 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     string line;
     if (!file) {
     cout << "Unable to open file: " << filename << endl;
-    return states;
+    }
+    if (file) {
+        cout << "Opened file: " << filename << endl;
     }
     while (getline(file, line)) {
         StateProps s;
