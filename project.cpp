@@ -54,16 +54,22 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     return states;
 }
 
+struct StateProps {
+    string state;
+    bool start;
+    bool finish;
+    set<string> route_a;
+    set<string> route_b;
+};
+
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
 
     for (const auto& qA : nfa) {
         for (const auto& qB : nfa) {
             // Check if qA is routed to qB and itself with the same input
-            if ((find(qA.route_a.begin(), qA.route_a.end(), qB.state) != qA.route_a.end() && 
-                 find(qA.route_a.begin(), qA.route_a.end(), qA.state) != qA.route_a.end()) ||
-                (find(qA.route_b.begin(), qA.route_b.end(), qB.state) != qA.route_b.end() && 
-                 find(qA.route_b.begin(), qA.route_b.end(), qA.state) != qA.route_b.end())) {
+            if ((qA.route_a.find(qB.state) != qA.route_a.end() && qA.route_a.find(qA.state) != qA.route_a.end()) ||
+                (qA.route_b.find(qB.state) != qA.route_b.end() && qA.route_b.find(qA.state) != qA.route_b.end())) {
 
                 // Combine qA and qB into a new state
                 StateProps newState;
@@ -72,10 +78,14 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
                 newState.finish = qA.finish || qB.finish;
 
                 // Merge the routes of qA and qB
-                newState.route_a.insert(newState.route_a.end(), qA.route_a.begin(), qA.route_a.end());
-                newState.route_a.insert(newState.route_a.end(), qB.route_a.begin(), qB.route_a.end());
-                newState.route_b.insert(newState.route_b.end(), qA.route_b.begin(), qA.route_b.end());
-                newState.route_b.insert(newState.route_b.end(), qB.route_b.begin(), qB.route_b.end());
+                newState.route_a.insert(qA.route_a.begin(), qA.route_a.end());
+                newState.route_a.insert(qB.route_a.begin(), qB.route_a.end());
+                newState.route_b.insert(qA.route_b.begin(), qA.route_b.end());
+                newState.route_b.insert(qB.route_b.begin(), qB.route_b.end());
+
+                // Remove routes to the state itself
+                newState.route_a.erase(newState.state);
+                newState.route_b.erase(newState.state);
 
                 // Add the new state to the DFA
                 dfa.push_back(newState);
@@ -85,6 +95,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
 
     return dfa;
 }
+
 
 void printStates(const vector<StateProps>& states) {
     for (const auto& state : states) {
