@@ -125,7 +125,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
             }
 
             // Construct the new state
-            string newStateStr = join(nextState, ',');
+            string newStateStr = join(nextState, ",");
             if (!newStateStr.empty()) {
                 // Check if the new state is already in the DFA
                 auto it = find_if(dfa.begin(), dfa.end(), [&](const StateProps& s) { return s.state == newStateStr; });
