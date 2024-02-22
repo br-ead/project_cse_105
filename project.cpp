@@ -130,7 +130,7 @@ void printStates(const vector<StateProps>& states) {
         
         cout << "When the input is a, it will route to ";
         if (state.route_a.empty()) {
-            cout << "nothing";
+            cout << "nothing.";
         } else {
             for (size_t i = 0; i < state.route_a.size(); ++i) {
                 cout << state.route_a[i];
@@ -138,11 +138,12 @@ void printStates(const vector<StateProps>& states) {
                     cout << ",";
                 }
             }
+            cout << ".";
         }
 
-        cout << ". When the input is b, it will route to ";
+        cout << " When the input is b, it will route to ";
         if (state.route_b.empty()) {
-            cout << "nothing";
+            cout << "nothing.";
         } else {
             for (size_t i = 0; i < state.route_b.size(); ++i) {
                 cout << state.route_b[i];
@@ -150,11 +151,13 @@ void printStates(const vector<StateProps>& states) {
                     cout << ",";
                 }
             }
+            cout << ".";
         }
 
-        cout << "." << endl;
+        cout << endl;
     }
 }
+
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
