@@ -54,7 +54,6 @@ vector<StateProps> readStatesFromFile(const string& filename) {
 
     return states;
 }
-
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
     set<vector<string>> processedRoutes;
@@ -106,7 +105,6 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
 
     return dfa;
 }
-
 
 
 void printStates(const vector<StateProps>& states) {
