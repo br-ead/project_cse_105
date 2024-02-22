@@ -108,13 +108,26 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
                     }
                 }
             }
+
+            // Sort the routes to eliminate duplicates
             sort(newState.route_a.begin(), newState.route_a.end());
             sort(newState.route_b.begin(), newState.route_b.end());
+
             // Add the new state to the DFA if not processed already
-            if (processedStates.find(newState.state) == processedStates.end()) {
+            string canonicalState = newState.state;
+            sort(canonicalState.begin(), canonicalState.end()); // Sort the state representation
+            if (processedStates.find(canonicalState) == processedStates.end()) {
                 dfa.push_back(newState);
-                processedStates.insert(newState.state);
+                processedStates.insert(canonicalState);
             }
+        }
+    }
+
+    // Simplify state representations like q1,q1 to just q1
+    for (auto& state : dfa) {
+        auto pos = state.state.find(",");
+        if (pos != string::npos && state.state.substr(1, pos - 1) == state.state.substr(pos + 1, state.state.size() - pos - 2)) {
+            state.state = "[" + state.state.substr(1, pos - 1) + "]";
         }
     }
 
