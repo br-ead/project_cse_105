@@ -92,7 +92,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
         }
     }
     processQueue.push(startStateSet);
-    dfaStates[startStateSet] = StateProps{join(startStateSet, ","), true, false, {}, {}};
+    dfaStates[startStateSet] = StateProps{join(startStateSet, ','), true, false, {}, {}};
 
     // Process each set of NFA states to create DFA states
     while (!processQueue.empty()) {
