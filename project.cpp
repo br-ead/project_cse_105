@@ -165,8 +165,8 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
         // Assign transitions to current DFA state
         for (auto& state : dfa) {
             if (state.state == currentState) {
-                state.route_a = joinStates(transitions.route_a);
-                state.route_b = joinStates(transitions.route_b);
+                state.route_a = joinStates(transitions['a']);
+                state.route_b = joinStates(transitions['b']);
                 break;
             }
         }
