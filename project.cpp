@@ -118,7 +118,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
     set<string> processedStates;
 
-    // Step 1: Determine initial state of DFA (epsilon closure of initial states of NFA)
+    // Step 1: Determine initial state of DFA
     set<string> initialClosure;
     for (const auto& state : nfa) {
         if (state.start) {
@@ -165,8 +165,8 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
         // Assign transitions to current DFA state
         for (auto& state : dfa) {
             if (state.state == currentState) {
-                state.route_a = {joinStates(transitions['a'])};
-                state.route_b = {joinStates(transitions['b'])};
+                state.route_a = joinStates(transitions['a']);
+                state.route_b = joinStates(transitions['b']);
                 break;
             }
         }
@@ -174,7 +174,6 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
 
     return dfa;
 }
-
 
 
 void printStates(const vector<StateProps>& states) {
