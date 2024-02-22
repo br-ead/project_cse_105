@@ -67,7 +67,7 @@ vector<string> split(const string& s, char delimiter) {
 #include <string>
 #include <vector>
 
-std::string join(const std::vector<string>& elements, const string& delimiter) {
+std::string join(const vector<string>& elements, const string& delimiter) {
     if (elements.empty()) {
         return "";
     }
@@ -108,7 +108,8 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
                     }
                 }
             }
-
+            sort(newState.route_a.begin(), newState.route_a.end());
+            sort(newState.route_b.begin(), newState.route_b.end());
             // Add the new state to the DFA if not processed already
             if (processedStates.find(newState.state) == processedStates.end()) {
                 dfa.push_back(newState);
