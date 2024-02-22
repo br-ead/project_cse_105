@@ -55,14 +55,6 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     return states;
 }
 
-struct StateProps {
-    string state;
-    bool start;
-    bool finish;
-    set<string> route_a;
-    set<string> route_b;
-};
-
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
 
