@@ -92,7 +92,6 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
 
 
 
-
 void printStates(const vector<StateProps>& states) {
     for (const auto& state : states) {
         cout << state.state << " is " << (state.start ? "" : "not ") << "a start state. ";
