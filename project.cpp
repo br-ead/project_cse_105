@@ -60,11 +60,14 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     // Generate all possible combinations of states
     for (int i = 0; i < (1 << nfa.size()); i++) {
         StateProps newState;
+        newState.state = "";
+        newState.start = false;
+        newState.finish = false;
 
         // For each bit set in the combination, add the corresponding state to the new state
         for (int j = 0; j < nfa.size(); j++) {
             if (i & (1 << j)) {
-                newState.state += nfa[j].state + ",";
+                newState.state += nfa[j].state + (newState.state.empty() ? "" : ",");
                 newState.start |= nfa[j].start;
                 newState.finish |= nfa[j].finish;
 
@@ -74,12 +77,19 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
             }
         }
 
+        // Remove duplicates from the routes
+        sort(newState.route_a.begin(), newState.route_a.end());
+        newState.route_a.erase(unique(newState.route_a.begin(), newState.route_a.end()), newState.route_a.end());
+        sort(newState.route_b.begin(), newState.route_b.end());
+        newState.route_b.erase(unique(newState.route_b.begin(), newState.route_b.end()), newState.route_b.end());
+
         // Add the new state to the DFA
         dfa.push_back(newState);
     }
 
     return dfa;
 }
+
 
 
 
