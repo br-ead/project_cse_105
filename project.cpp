@@ -91,7 +91,9 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
             StateProps newState;
             newState.state = "[" + qA.state + "," + qB.state + "]";
             newState.start = qA.start || qB.start;
-            newState.finish = (qA.finish && qB.finish); // Check if both qA and qB are final states
+
+            // Determine if either qA or qB is a final state
+            newState.finish = qA.finish || qB.finish;
 
             // Determine the transitions for inputs 'a' and 'b' based on the NFA transitions
             for (const auto& routeA : qA.route_a) {
@@ -133,6 +135,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
 
     return dfa;
 }
+
 
 
 
