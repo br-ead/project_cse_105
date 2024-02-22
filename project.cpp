@@ -94,8 +94,11 @@ void printStates(const vector<StateProps>& states) {
         if (state.route_a.empty()) {
             cout << "nothing";
         } else {
-            for (const auto& route : state.route_a) {
-                cout << route << ",";
+            for (size_t i = 0; i < state.route_a.size(); ++i) {
+                cout << state.route_a[i];
+                if (i != state.route_a.size() - 1) {
+                    cout << ",";
+                }
             }
         }
 
@@ -104,14 +107,18 @@ void printStates(const vector<StateProps>& states) {
         if (state.route_b.empty()) {
             cout << "nothing";
         } else {
-            for (const auto& route : state.route_b) {
-                cout << route << ",";
+            for (size_t i = 0; i < state.route_b.size(); ++i) {
+                cout << state.route_b[i];
+                if (i != state.route_b.size() - 1) {
+                    cout << ",";
+                }
             }
         }
 
         cout << endl;
     }
 }
+
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
