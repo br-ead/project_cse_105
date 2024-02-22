@@ -86,7 +86,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
         }
 
         // Check if this state is already in the DFA
-        auto it = find_if(dfa.begin(), dfa.end(), &newState { return s.state == newState.state; });
+        auto it = find_if(dfa.begin(), dfa.end(), &newState) { return s.state == newState.state; };
         if (it == dfa.end()) {
             // Add the new state to the DFA
             dfa.push_back(newState);
@@ -100,7 +100,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
         // For each NFA state in the current DFA state
         for (const string& nfaState : split(dfaState.state, ',')) {
             // Find the corresponding NFA state
-            auto it = find_if(nfa.begin(), nfa.end(), &nfaState { return s.state == nfaState; });
+            auto it = find_if(nfa.begin(), nfa.end(), &nfaState) { return s.state == nfaState; };
             if (it != nfa.end()) {
                 // Add all reachable states to the set of next states for the current input
                 nextStatesA.insert(it->route_a.begin(), it->route_a.end());
