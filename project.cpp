@@ -57,35 +57,49 @@ vector<StateProps> readStatesFromFile(const string& filename) {
 
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
+    set<string> processedStates;
 
+    // Process each state in the NFA
     for (const auto& qA : nfa) {
         for (const auto& qB : nfa) {
-            // Check if qA is routed to qB and itself with the same input
-            if ((find(qA.route_a.begin(), qA.route_a.end(), qB.state) != qA.route_a.end() && 
-                 find(qA.route_a.begin(), qA.route_a.end(), qA.state) != qA.route_a.end()) ||
-                (find(qA.route_b.begin(), qA.route_b.end(), qB.state) != qA.route_b.end() && 
-                 find(qA.route_b.begin(), qA.route_b.end(), qA.state) != qA.route_b.end())) {
+            // Combine states qA and qB into a new state
+            StateProps newState;
+            newState.state = "l" + qA.state + "," + qB.state + "l";
+            newState.start = qA.start || qB.start;
+            newState.finish = qA.finish || qB.finish;
 
-                // Combine qA and qB into a new state
-                StateProps newState;
-                newState.state = "l"+qA.state + "," + qB.state + "l";
-                newState.start = qA.start || qB.start;
-                newState.finish = qA.finish || qB.finish;
+            // Merge routes for input 'a'
+            for (const auto& routeA : qA.route_a) {
+                for (const auto& routeB : qB.route_a) {
+                    newState.route_a.push_back(routeA + "," + routeB);
+                }
+            }
 
-                // Merge the routes of qA and qB
-                newState.route_a.insert(newState.route_a.end(), qA.route_a.begin(), qA.route_a.end());
-                newState.route_a.insert(newState.route_a.end(), qB.route_a.begin(), qB.route_a.end());
-                newState.route_b.insert(newState.route_b.end(), qA.route_b.begin(), qA.route_b.end());
-                newState.route_b.insert(newState.route_b.end(), qB.route_b.begin(), qB.route_b.end());
+            // Merge routes for input 'b'
+            for (const auto& routeA : qA.route_b) {
+                for (const auto& routeB : qB.route_b) {
+                    newState.route_b.push_back(routeA + "," + routeB);
+                }
+            }
 
-                // Add the new state to the DFA
+            // Sort and remove duplicates from route_a and route_b
+            sort(newState.route_a.begin(), newState.route_a.end());
+            newState.route_a.erase(unique(newState.route_a.begin(), newState.route_a.end()), newState.route_a.end());
+
+            sort(newState.route_b.begin(), newState.route_b.end());
+            newState.route_b.erase(unique(newState.route_b.begin(), newState.route_b.end()), newState.route_b.end());
+
+            // Add the new state to the DFA if not processed already
+            if (processedStates.find(newState.state) == processedStates.end()) {
                 dfa.push_back(newState);
+                processedStates.insert(newState.state);
             }
         }
     }
 
     return dfa;
 }
+
 
 void printStates(const vector<StateProps>& states) {
     for (const auto& state : states) {
