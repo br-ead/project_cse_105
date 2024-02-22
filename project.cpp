@@ -82,66 +82,44 @@ std::string join(const std::vector<string>& elements, const string& delimiter) {
 
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
+    set<string> processedStates;
 
-    // Initialize the DFA with the start state
-    StateProps startState;
-    startState.state = nfa[0].state; // Assuming the first state of NFA is the start state
-    startState.start = true;
-    startState.finish = false;
-    dfa.push_back(startState);
+    // Process each state in the NFA
+    for (const auto& qA : nfa) {
+        for (const auto& qB : nfa) {
+            // Combine states qA and qB into a new state
+            StateProps newState;
+            newState.state = "[" + qA.state + "," + qB.state + "]";
+            newState.start = qA.start || qB.start;
+            newState.finish = (qA.finish && qB.finish); // Check if both qA and qB are final states
 
-    // Process each state in the DFA
-    for (size_t i = 0; i < dfa.size(); ++i) {
-        StateProps& currentState = dfa[i];
-
-        // Compute transitions for input 'a'
-        set<string> nextStatesA;
-        for (const auto& state : split(currentState.state, ',')) {
-            auto it = find_if(nfa.begin(), nfa.end(), [&](const StateProps& s) { return s.state == state; });
-            if (it != nfa.end()) {
-                nextStatesA.insert(it->route_a.begin(), it->route_a.end());
-            }
-        }
-        currentState.route_a = vector<string>(nextStatesA.begin(), nextStatesA.end());
-
-        // Compute transitions for input 'b'
-        set<string> nextStatesB;
-        for (const auto& state : split(currentState.state, ',')) {
-            auto it = find_if(nfa.begin(), nfa.end(), [&](const StateProps& s) { return s.state == state; });
-            if (it != nfa.end()) {
-                nextStatesB.insert(it->route_b.begin(), it->route_b.end());
-            }
-        }
-        currentState.route_b = vector<string>(nextStatesB.begin(), nextStatesB.end());
-
-        // Explore new states
-        for (char input : {'a', 'b'}) {
-            // Compute the next state
-            vector<string> nextState;
-            if (input == 'a') {
-                nextState = currentState.route_a;
-            } else {
-                nextState = currentState.route_b;
-            }
-
-            // Construct the new state
-            string newStateStr = join(nextState, ",");
-            if (!newStateStr.empty()) {
-                // Check if the new state is already in the DFA
-                auto it = find_if(dfa.begin(), dfa.end(), [&](const StateProps& s) { return s.state == newStateStr; });
-                if (it == dfa.end()) {
-                    StateProps newState;
-                    newState.state = newStateStr;
-                    newState.start = false;
-                    newState.finish = false;
-                    dfa.push_back(newState);
+            // Determine the transitions for inputs 'a' and 'b' based on the NFA transitions
+            for (const auto& routeA : qA.route_a) {
+                for (const auto& routeB : qB.route_a) {
+                    if (routeA == routeB) {
+                        newState.route_a.push_back(routeA); // 'a' transition remains the same
+                    }
                 }
+            }
+            for (const auto& routeA : qA.route_b) {
+                for (const auto& routeB : qB.route_b) {
+                    if (routeA == routeB) {
+                        newState.route_b.push_back(routeA); // 'b' transition remains the same
+                    }
+                }
+            }
+
+            // Add the new state to the DFA if not processed already
+            if (processedStates.find(newState.state) == processedStates.end()) {
+                dfa.push_back(newState);
+                processedStates.insert(newState.state);
             }
         }
     }
 
     return dfa;
 }
+
 
 
 void printStates(const vector<StateProps>& states) {
