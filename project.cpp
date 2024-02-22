@@ -18,7 +18,10 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     vector<StateProps> states;
     ifstream file(filename);
     string line;
-
+    if (!file) {
+    cout << "Unable to open file: " << filename << endl;
+    return states;
+    }
     while (getline(file, line)) {
         StateProps s;
         istringstream iss(line);
