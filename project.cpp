@@ -28,7 +28,7 @@ vector<StateProps> readStatesFromFile(const string& filename) {
         StateProps s;
         istringstream iss(line);
         string token;
-        iss >> s.state >> token
+        iss >> s.state >> token;
         s.start = (token == "true");
         iss >> token;
 
