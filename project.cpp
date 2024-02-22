@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <set>
+#include <bitset>
 
 using namespace std;
 
@@ -54,6 +55,17 @@ vector<StateProps> readStatesFromFile(const string& filename) {
 
     return states;
 }
+
+vector<string> split(const string& s, char delimiter) {
+    vector<string> tokens;
+    string token;
+    istringstream tokenStream(s);
+    while (getline(tokenStream, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
 
@@ -73,8 +85,12 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
             }
         }
 
-        // Add the new state to the DFA
-        dfa.push_back(newState);
+        // Check if this state is already in the DFA
+        auto it = find_if(dfa.begin(), dfa.end(), &newState { return s.state == newState.state; });
+        if (it == dfa.end()) {
+            // Add the new state to the DFA
+            dfa.push_back(newState);
+        }
     }
 
     // Define the transition function for the DFA
