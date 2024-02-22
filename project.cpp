@@ -31,6 +31,7 @@ vector<StateProps> readStatesFromFile(const string& filename) {
         /*if (!(iss >> s.state >> token)) { 
             break; 
         }*/
+        iss >> s.state >> token;
         s.start = (token == "true");
         if (!(iss >> token)) {
             break;
