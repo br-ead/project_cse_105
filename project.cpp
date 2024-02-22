@@ -28,13 +28,10 @@ vector<StateProps> readStatesFromFile(const string& filename) {
         StateProps s;
         istringstream iss(line);
         string token;
-        if (!(iss >> s.state >> token)) { 
-            break; 
-        }
+        iss >> s.state >> token
         s.start = (token == "true");
-        if (!(iss >> token)) {
-            break;
-        }
+        iss >> token;
+
         s.finish = (token == "true");
 
         // Read routes
