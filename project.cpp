@@ -130,7 +130,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
         for (const auto& symbol : {'a', 'b'}) { // Assuming input alphabet is 'a' and 'b'
             set<string> nextStateSet;
             for (const auto& state : splitStates(currentState)) {
-                nextStateSet = union(nextStateSet, moveOnInput(state, symbol, nfa));
+                nextStateSet = unionStates(nextStateSet, moveOnInput(state, symbol, nfa));
             }
             transitions[symbol] = nextStateSet;
 
@@ -149,8 +149,8 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
         // Assign transitions to current DFA state
         for (auto& state : dfa) {
             if (state.state == currentState) {
-                state.route_a = joinStates(transitions['a']);
-                state.route_b = joinStates(transitions['b']);
+                state.route_a = joinStates(transitions('a'));
+                state.route_b = joinStates(transitions('b'));
                 break;
             }
         }
