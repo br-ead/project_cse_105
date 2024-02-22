@@ -115,7 +115,7 @@ void printStates(const vector<StateProps>& states) {
             }
         }
 
-        cout << endl << endl;
+        cout << endl;
     }
 }
 
