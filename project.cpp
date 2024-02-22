@@ -22,12 +22,15 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     while (getline(file, line)) {
         StateProps s;
         istringstream iss(line);
-        string start_str, finish_str, token;
-        if (!(iss >> s.state >> start_str >> finish_str)) { 
+        string token;
+        if (!(iss >> s.state >> token)) { 
             break; 
         }
-        s.start = (start_str == "true");
-        s.finish = (finish_str == "true");
+        s.start = (token == "true");
+        if (!(iss >> token)) {
+            break;
+        }
+        s.finish = (token == "true");
 
         // Read routes
         while (getline(iss, token, '-')) {
