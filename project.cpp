@@ -24,14 +24,13 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     if (file) {
         cout << "Opened file: " << filename << endl;
     }
-    while (getline(file, line)) {
+        while (getline(file, line)) {
         StateProps s;
         istringstream iss(line);
         string token;
-        /*if (!(iss >> s.state >> token)) { 
+        if (!(iss >> s.state >> token)) { 
             break; 
-        }*/
-        iss >> s.state >> token;
+        }
         s.start = (token == "true");
         if (!(iss >> token)) {
             break;
@@ -42,9 +41,11 @@ vector<StateProps> readStatesFromFile(const string& filename) {
         while (getline(iss, token, '-')) {
             if (token == "x") {
                 while (getline(iss, token, '-') && token != "y") {
-                    s.route_a.push_back(token);
+                    if (token != "null") {
+                        s.route_a.push_back(token);
+                    }
                 }
-            } else if (token != "y") {
+            } else if (token != "y" && token != "null") {
                 s.route_b.push_back(token);
             }
         }
