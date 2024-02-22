@@ -68,7 +68,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
 
                 // Combine qA and qB into a new state
                 StateProps newState;
-                newState.state = "("+qA.state + "," + qB.state + ")";
+                newState.state = "l"+qA.state + "," + qB.state + "l";
                 newState.start = qA.start || qB.start;
                 newState.finish = qA.finish || qB.finish;
 
