@@ -77,7 +77,7 @@ std::string join(const vector<string>& elements, const string& delimiter) {
 
     return result;
 }
-
+/*
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
     set<string> processedStates;
@@ -128,6 +128,55 @@ if (qA.state == qB.state) {
 }
 
 
+*/
+vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
+    vector<StateProps> dfa;
+
+    // Track the selected start state
+    StateProps selectedStartState;
+
+    // Generate all possible combinations of states
+    for (int i = 0; i < (1 << nfa.size()); i++) {
+        StateProps newState;
+        newState.state = "";
+        newState.start = false;
+        newState.finish = false;
+
+        // For each bit set in the combination, add the corresponding state to the new state
+        for (int j = 0; j < nfa.size(); j++) {
+            if (i & (1 << j)) {
+                newState.state += nfa[j].state + (newState.state.empty() ? "" : ",");
+                newState.finish |= nfa[j].finish;
+            }
+        }
+
+        // Check if this state is a start state
+        if (newState.state == "q0") {
+            newState.start = true;
+            selectedStartState = newState; // Set as the selected start state
+        }
+
+        // Check if this state is already in the DFA
+        auto it = find_if(dfa.begin(), dfa.end(), [&newState](const StateProps& s) {
+            return s.state == newState.state;
+        });
+
+        if (it == dfa.end()) {
+            // Add the new state to the DFA
+            dfa.push_back(newState);
+        }
+    }
+
+    // Set the designated start state in the DFA
+    for (auto& state : dfa) {
+        if (state.state == selectedStartState.state) {
+            state.start = true;
+            break;
+        }
+    }
+
+    return dfa;
+}
 
 
 
