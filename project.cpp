@@ -64,6 +64,21 @@ vector<string> split(const string& s, char delimiter) {
     }
     return tokens;
 }
+#include <string>
+#include <vector>
+
+std::string join(const std::vector<std::string>& elements, const std::string& delimiter) {
+    if (elements.empty()) {
+        return "";
+    }
+
+    std::string result = elements[0];
+    for (size_t i = 1; i < elements.size(); ++i) {
+        result += delimiter + elements[i];
+    }
+
+    return result;
+}
 
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
