@@ -77,107 +77,82 @@ std::string join(const vector<string>& elements, const string& delimiter) {
 
     return result;
 }
-/*
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
-    vector<StateProps> dfa;
-    set<string> processedStates;
-
-    // Process each state in the NFA
-    for (const auto& qA : nfa) {
-        for (const auto& qB : nfa) {
-            // Combine states qA and qB into a new state
-            StateProps newState;
-            newState.state = "[" + qA.state + "," + qB.state + "]";
-            newState.start = qA.start || qB.start;
-
-            // Determine if either qA or qB is a final state
-            newState.finish = qA.finish || qB.finish;
-
-            // Determine the transitions for inputs 'a' and 'b' based on the NFA transitions
-            // Determine the transitions for inputs 'a' and 'b' based on the NFA transitions
-if (qA.state == qB.state) {
-    // For states qA and qB being the same, the transition remains the same for both inputs
-    newState.route_a = qA.route_a;
-    newState.route_b = qA.route_b;
-} else {
-    // For different states, 'a' transitions to itself and 'b' follows the NFA transitions
-    newState.route_a.push_back(newState.state); // 'a' transitions to itself
-    newState.route_b.insert(newState.route_b.end(), qA.route_b.begin(), qA.route_b.end()); // 'b' follows the NFA transitions
-}
-
-
-            // Add the new state to the DFA if not processed already
-            string canonicalState = newState.state;
-            sort(canonicalState.begin(), canonicalState.end()); // Sort the state representation
-            if (processedStates.find(canonicalState) == processedStates.end()) {
-                dfa.push_back(newState);
-                processedStates.insert(canonicalState);
-            }
+    // Initial state for DFA: combine all NFA start states
+    string startState = "";
+    for (const auto& state : nfa) {
+        if (state.start) {
+            if (!startState.empty()) startState += ",";
+            startState += state.state;
         }
     }
 
-    // Simplify state representations like q1,q1 to just q1
-    for (auto& state : dfa) {
-        auto pos = state.state.find(",");
-        if (pos != string::npos && state.state.substr(1, pos - 1) == state.state.substr(pos + 1, state.state.size() - pos - 2)) {
-            state.state = "[" + state.state.substr(1, pos - 1) + "]";
-        }
-    }
+    // Queue to manage states to process
+    queue<string> toProcess;
+    toProcess.push(startState);
 
-    return dfa;
-}
+    // Keep track of processed and to be processed states
+    set<string> processed;
+    processed.insert(startState);
 
-
-*/
-vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
+    // Resulting DFA
     vector<StateProps> dfa;
 
-    // Track the selected start state
-    StateProps selectedStartState;
+    // Process states
+    while (!toProcess.empty()) {
+        string currentState = toProcess.front();
+        toProcess.pop();
 
-    // Generate all possible combinations of states
-    for (int i = 0; i < (1 << nfa.size()); i++) {
         StateProps newState;
-        newState.state = "";
-        newState.start = false;
-        newState.finish = false;
+        newState.state = currentState;
+        newState.start = (currentState == startState); // Start state check
+        newState.finish = false; // To be determined based on NFA finish states
 
-        // For each bit set in the combination, add the corresponding state to the new state
-        for (int j = 0; j < nfa.size(); j++) {
-            if (i & (1 << j)) {
-                newState.state += nfa[j].state + (newState.state.empty() ? "" : ",");
-                newState.finish |= nfa[j].finish;
+        // Determine finish state and transitions for 'a' and 'b'
+        set<string> aStates, bStates;
+        vector<string> currentStates = split(currentState, ',');
+        for (const auto& cs : currentStates) {
+            // Find corresponding NFA state
+            for (const auto& nfaState : nfa) {
+                if (nfaState.state == cs) {
+                    newState.finish |= nfaState.finish; // Finish state determination
+
+                    // Transitions for 'a'
+                    for (const auto& aState : nfaState.route_a) {
+                        aStates.insert(aState);
+                    }
+
+                    // Transitions for 'b'
+                    for (const auto& bState : nfaState.route_b) {
+                        bStates.insert(bState);
+                    }
+                    break; // Break since state is found
+                }
             }
         }
 
-        // Check if this state is a start state
-        if (newState.state == "q0") {
-            newState.start = true;
-            selectedStartState = newState; // Set as the selected start state
+        // Convert sets to string and vector for newState
+        newState.route_a = vector<string>(aStates.begin(), aStates.end());
+        newState.route_b = vector<string>(bStates.begin(), bStates.end());
+
+        // Add transitions states to process queue if not processed
+        string aStateStr = join(newState.route_a, ",");
+        string bStateStr = join(newState.route_b, ",");
+        if (!aStateStr.empty() && processed.find(aStateStr) == processed.end()) {
+            toProcess.push(aStateStr);
+            processed.insert(aStateStr);
+        }
+        if (!bStateStr.empty() && processed.find(bStateStr) == processed.end()) {
+            toProcess.push(bStateStr);
+            processed.insert(bStateStr);
         }
 
-        // Check if this state is already in the DFA
-        auto it = find_if(dfa.begin(), dfa.end(), [&newState](const StateProps& s) {
-            return s.state == newState.state;
-        });
-
-        if (it == dfa.end()) {
-            // Add the new state to the DFA
-            dfa.push_back(newState);
-        }
-    }
-
-    // Set the designated start state in the DFA
-    for (auto& state : dfa) {
-        if (state.state == selectedStartState.state) {
-            state.start = true;
-            break;
-        }
+        // Add newState to DFA
+        dfa.push_back(newState);
     }
 
     return dfa;
 }
-
 
 
 void printStates(const vector<StateProps>& states) {
