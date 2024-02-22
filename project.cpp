@@ -53,6 +53,38 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     return states;
 }
 
+vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
+    vector<StateProps> dfa;
+
+    for (const auto& qA : nfa) {
+        for (const auto& qB : nfa) {
+            // Check if qA is routed to qB and itself with the same input
+            if ((find(qA.route_a.begin(), qA.route_a.end(), qB.state) != qA.route_a.end() && 
+                 find(qA.route_a.begin(), qA.route_a.end(), qA.state) != qA.route_a.end()) ||
+                (find(qA.route_b.begin(), qA.route_b.end(), qB.state) != qA.route_b.end() && 
+                 find(qA.route_b.begin(), qA.route_b.end(), qA.state) != qA.route_b.end())) {
+
+                // Combine qA and qB into a new state
+                StateProps newState;
+                newState.state = qA.state + "," + qB.state;
+                newState.start = qA.start || qB.start;
+                newState.finish = qA.finish || qB.finish;
+
+                // Merge the routes of qA and qB
+                newState.route_a.insert(newState.route_a.end(), qA.route_a.begin(), qA.route_a.end());
+                newState.route_a.insert(newState.route_a.end(), qB.route_a.begin(), qB.route_a.end());
+                newState.route_b.insert(newState.route_b.end(), qA.route_b.begin(), qA.route_b.end());
+                newState.route_b.insert(newState.route_b.end(), qB.route_b.begin(), qB.route_b.end());
+
+                // Add the new state to the DFA
+                dfa.push_back(newState);
+            }
+        }
+    }
+
+    return dfa;
+}
+
 void printStates(const vector<StateProps>& states) {
     for (const auto& state : states) {
         cout << state.state << " is " << (state.start ? "" : "not ") << "a start state. ";
@@ -92,6 +124,8 @@ int main(int argc, char *argv[]) {
     vector<StateProps> nfa = readStatesFromFile(filename);
     //cout << "Read " << nfa.size() << " states from the file." << endl;
     printStates(nfa);
+    vector<StateProps> dfa=convertNFAtoDFA(nfa);
+    printStates(dfa);
 
     return 0;
 }
