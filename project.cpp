@@ -80,6 +80,23 @@ bool containsAcceptingState(const set<string>& states, const vector<StateProps>&
     }
     return false;
 }
+// Function to split a string of states into a set of states
+set<string> splitStates(const string& states) {
+    set<string> stateSet;
+    stringstream ss(states);
+    string state;
+    while (getline(ss, state, ',')) {
+        stateSet.insert(state);
+    }
+    return stateSet;
+}
+
+// Function to perform union operation on two sets of states
+set<string> unionStates(const set<string>& states1, const set<string>& states2) {
+    set<string> unionSet = states1;
+    unionSet.insert(states2.begin(), states2.end());
+    return unionSet;
+}
 
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
