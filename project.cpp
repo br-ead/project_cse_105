@@ -64,8 +64,6 @@ vector<string> split(const string& s, char delimiter) {
     }
     return tokens;
 }
-#include <string>
-#include <vector>
 
 std::string join(const vector<string>& elements, const string& delimiter) {
     if (elements.empty()) {
@@ -96,15 +94,17 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
             newState.finish = qA.finish || qB.finish;
 
             // Determine the transitions for inputs 'a' and 'b' based on the NFA transitions
-            if (qA.state == qB.state) {
-                // For states qA and qB being the same, the transition remains the same for both inputs
-                newState.route_a = qA.route_a;
-                newState.route_b = qA.route_b;
-            } else {
-                // For different states, 'a' transitions to itself and 'b' follows the NFA transitions
-                newState.route_a.push_back(qA.state);
-                newState.route_b.push_back(qB.state);
-            }
+            // Determine the transitions for inputs 'a' and 'b' based on the NFA transitions
+if (qA.state == qB.state) {
+    // For states qA and qB being the same, the transition remains the same for both inputs
+    newState.route_a = qA.route_a;
+    newState.route_b = qA.route_b;
+} else {
+    // For different states, 'a' transitions to itself and 'b' follows the NFA transitions
+    newState.route_a.push_back(newState.state); // 'a' transitions to itself
+    newState.route_b.insert(newState.route_b.end(), qA.route_b.begin(), qA.route_b.end()); // 'b' follows the NFA transitions
+}
+
 
             // Add the new state to the DFA if not processed already
             string canonicalState = newState.state;
