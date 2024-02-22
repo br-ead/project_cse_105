@@ -70,27 +70,35 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
                 newState.state += nfa[j].state + (newState.state.empty() ? "" : ",");
                 newState.start |= nfa[j].start;
                 newState.finish |= nfa[j].finish;
-
-                // Merge the routes of the current state into the new state
-                newState.route_a.insert(newState.route_a.end(), nfa[j].route_a.begin(), nfa[j].route_a.end());
-                newState.route_b.insert(newState.route_b.end(), nfa[j].route_b.begin(), nfa[j].route_b.end());
             }
         }
-
-        // Remove duplicates from the routes
-        sort(newState.route_a.begin(), newState.route_a.end());
-        newState.route_a.erase(unique(newState.route_a.begin(), newState.route_a.end()), newState.route_a.end());
-        sort(newState.route_b.begin(), newState.route_b.end());
-        newState.route_b.erase(unique(newState.route_b.begin(), newState.route_b.end()), newState.route_b.end());
 
         // Add the new state to the DFA
         dfa.push_back(newState);
     }
 
+    // Define the transition function for the DFA
+    for (StateProps& dfaState : dfa) {
+        set<string> nextStatesA, nextStatesB;
+
+        // For each NFA state in the current DFA state
+        for (const string& nfaState : split(dfaState.state, ',')) {
+            // Find the corresponding NFA state
+            auto it = find_if(nfa.begin(), nfa.end(), &nfaState { return s.state == nfaState; });
+            if (it != nfa.end()) {
+                // Add all reachable states to the set of next states for the current input
+                nextStatesA.insert(it->route_a.begin(), it->route_a.end());
+                nextStatesB.insert(it->route_b.begin(), it->route_b.end());
+            }
+        }
+
+        // The next state for the current input is the DFA state representing the set of next states
+        dfaState.route_a = vector<string>(nextStatesA.begin(), nextStatesA.end());
+        dfaState.route_b = vector<string>(nextStatesB.begin(), nextStatesB.end());
+    }
+
     return dfa;
 }
-
-
 
 void printStates(const vector<StateProps>& states) {
     for (const auto& state : states) {
