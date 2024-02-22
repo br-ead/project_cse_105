@@ -96,24 +96,15 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
             newState.finish = qA.finish || qB.finish;
 
             // Determine the transitions for inputs 'a' and 'b' based on the NFA transitions
-            for (const auto& routeA : qA.route_a) {
-                for (const auto& routeB : qB.route_a) {
-                    if (routeA == routeB) {
-                        newState.route_a.push_back(routeA); // 'a' transition remains the same
-                    }
-                }
+            if (qA.state == qB.state) {
+                // For states qA and qB being the same, the transition remains the same for both inputs
+                newState.route_a = qA.route_a;
+                newState.route_b = qA.route_b;
+            } else {
+                // For different states, 'a' transitions to itself and 'b' follows the NFA transitions
+                newState.route_a.push_back(qA.state);
+                newState.route_b = qB.route_b;
             }
-            for (const auto& routeA : qA.route_b) {
-                for (const auto& routeB : qB.route_b) {
-                    if (routeA == routeB) {
-                        newState.route_b.push_back(routeA); // 'b' transition remains the same
-                    }
-                }
-            }
-
-            // Sort the routes to eliminate duplicates
-            sort(newState.route_a.begin(), newState.route_a.end());
-            sort(newState.route_b.begin(), newState.route_b.end());
 
             // Add the new state to the DFA if not processed already
             string canonicalState = newState.state;
@@ -135,6 +126,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
 
     return dfa;
 }
+
 
 
 
