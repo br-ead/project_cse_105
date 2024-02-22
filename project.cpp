@@ -57,28 +57,30 @@ vector<StateProps> readStatesFromFile(const string& filename) {
 
     return states;
 }
-vector<string> split(const string& s, char delimiter) {
-    vector<string> tokens;
-    string token;
-    istringstream tokenStream(s);
-    while (getline(tokenStream, token, delimiter)) {
-        tokens.push_back(token);
+// Function to join states into a single string
+string joinStates(const set<string>& states) {
+    string joinedState;
+    for (const auto& state : states) {
+        if (!joinedState.empty()) {
+            joinedState += ",";
+        }
+        joinedState += state;
     }
-    return tokens;
+    return joinedState;
 }
 
-std::string join(const vector<string>& elements, const string& delimiter) {
-    if (elements.empty()) {
-        return "";
+// Function to check if a set of states contains an accepting state
+bool containsAcceptingState(const set<string>& states, const vector<StateProps>& nfa) {
+    for (const auto& state : states) {
+        for (const auto& nfaState : nfa) {
+            if (nfaState.state == state && nfaState.finish) {
+                return true;
+            }
+        }
     }
-
-    std::string result = elements[0];
-    for (size_t i = 1; i < elements.size(); ++i) {
-        result += delimiter + elements[i];
-    }
-
-    return result;
+    return false;
 }
+
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
     set<string> processedStates;
@@ -90,7 +92,6 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
             initialClosure.insert(state.state);
         }
     }
-    initialClosure = epsilonClosure(initialClosure, nfa);
 
     // Create initial state of DFA
     StateProps initialState;
@@ -114,7 +115,6 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
             for (const auto& state : splitStates(currentState)) {
                 nextStateSet = union(nextStateSet, moveOnInput(state, symbol, nfa));
             }
-            nextStateSet = epsilonClosure(nextStateSet, nfa);
             transitions[symbol] = nextStateSet;
 
             // Step 4: Identify new DFA states
@@ -141,6 +141,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
 
     return dfa;
 }
+
 
 
 void printStates(const vector<StateProps>& states) {
