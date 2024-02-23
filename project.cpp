@@ -46,7 +46,6 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     }
     return states;
 }
-// Iterate through file with contents like state-true-finish- etc.
 
 string findInitialState(const vector<StateProps>& nfa) {
     for (const auto& stateNFA : nfa) {
@@ -56,7 +55,6 @@ string findInitialState(const vector<StateProps>& nfa) {
     }
     return "";
 }
-// We use this with initializeDFA to generate our starter DFA.
 
 vector<StateProps> initializeDFA(const vector<StateProps>& nfa, const string& initialState) {
     vector<StateProps> dfa;
@@ -68,24 +66,23 @@ vector<StateProps> initializeDFA(const vector<StateProps>& nfa, const string& in
     }
     return dfa;
 }
-// We use this to make our starter DFA.
+// prompt -- Using findInitialState function generate a way to initialize a DFA for my NFA to DFA procedure.
 
 bool isFinalState(const string& compositeState, const vector<StateProps>& dfa) {
     // Split the composite state into individual states
     stringstream ss(compositeState);
     string state;
-    while (getline(ss, state, '/')) { // Assuming '/' is the delimiter
-        // Check each state in the composite state
+    while (getline(ss, state, '/')) {
         for (const auto& dfaState : dfa) {
             if (dfaState.state == state && dfaState.finish) {
                 return true; // Return true if any of the states is a final state
             }
         }
     }
-    return false; // Return false if none of the states are final states
+    return false;
 }
-
-// Chat gpt work ^, basically iterates through the string, if either qi or qj is true then it is a finish state.
+// prompt -- Some of my values are composites. They are separated by a delimiter, if any of them, however, are a final
+// state I want the state to be a final state.
 
 string convertSetToStateName(const set<string>& stateSet) {
     string stateName;
@@ -95,7 +92,8 @@ string convertSetToStateName(const set<string>& stateSet) {
     }
     return stateName.empty() ? "null" : stateName;
 }
-// Implemented by chat GPT ^
+// prompt -- Help me generate a function that will generate a new stateName for any potential composite states that
+// I create
 
 void printStates(const vector<StateProps>& states) {
     for (const auto& stateEntry : states) {
@@ -263,7 +261,7 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
 
             // Check if nextState is meaningful before adding to DFA
             if (!nextStateSet.empty() && !isStateInDFA(nextState, dfa)) {
-                StateProps newState = createNewState(nextState, isCompositeFinal(nextStateSet, nfa));
+                StateProps newState = createNewState(nextState, isFinalState(nextStateSet.state, nfa));
                 dfa.push_back(newState);
                 newStates.push(nextState);
             }
