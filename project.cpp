@@ -21,7 +21,7 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     vector<StateProps> states;
     ifstream file(filename);
     string line;
-    while (getline(file, line)) {
+    while (getline(file, line)) { // my input uses the delimiter -
         StateProps s;
         istringstream iss(line);
         string token;
@@ -55,7 +55,21 @@ string findInitialState(const vector<StateProps>& nfa) {
     }
     return "";
 }
+// We use this in conjunction with initializeDFA to generate our starter DFA.
 
+vector<StateProps> initializeDFA(const vector<StateProps>& nfa, const string& initialState) {
+    vector<StateProps> dfa;
+    for (const auto& newState : nfa) {
+        if (newState.state == initialState) {
+            dfa.push_back(newState);
+            break;
+        }
+    }
+    return dfa;
+}
+// We use this to make our starter DFA.
+
+/*
 bool isFinalState(const string& state, const vector<StateProps>& dfa) {
     for (const auto& dfaState : dfa) {
         if (dfaState.state == state && dfaState.finish) {
@@ -64,99 +78,24 @@ bool isFinalState(const string& state, const vector<StateProps>& dfa) {
     }
     return false;
 }
+Used Chat GPT here, but this is my isFinalState check */
 
-vector<StateProps> initializeDFA(const vector<StateProps>& nfa, const string& initialState) {
-    vector<StateProps> dfa;
-    for (const auto& state : nfa) {
-        if (state.state == initialState) {
-            dfa.push_back(state);
-            break;
-        }
-    }
-    return dfa;
-}
-
-set<string> findClosure(const vector<StateProps>& nfa, const set<string>& states) {
-    set<string> closure = states;
-    return closure;
-}
-
-string convertSetToStateName(const set<string>& stateSet) {
-    string stateName;
-    for (const auto& state : stateSet) {
-        if (!stateName.empty()) {
-            stateName += ",";
-        }
-        stateName += state;
-    }
-    cout << "[" + stateName + "]" << endl;
-    return "[" + stateName + "]";
-}
-
-
-void addStateToDFA(vector<StateProps>& dfa, queue<set<string>>& stateQueue, set<string>& visitedStates, const set<string>& newState, bool isStart, bool isFinish) {
-    string stateName = convertSetToStateName(newState);
-    cout << "----" + stateName + "----" << endl;
-    if (visitedStates.find(stateName) == visitedStates.end()) {
-        StateProps dfaState;
-        dfaState.state = stateName;
-        dfaState.start = isStart;
-        dfaState.finish = isFinish;
-        dfa.push_back(dfaState);
-        stateQueue.push(newState);
-        visitedStates.insert(stateName);
-    }
-}
-
-vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
-    vector<StateProps> dfa;
-    set<string> visitedStates;
-    queue<set<string>> stateQueue;
-    map<string, set<string>> transitionMapA, transitionMapB; 
-    string initialState = findInitialState(nfa);
-    set<string> initialSet = {initialState};
-    stateQueue.push(initialSet);
-    visitedStates.insert(initialState);
-    while (!stateQueue.empty()) {
-        set<string> currentStateSet = stateQueue.front();
-        stateQueue.pop();
-        set<string> newStateA, newStateB;
-        bool isFinal = false;
-        for (const string& state : currentStateSet) {
-            for (const auto& nfaState : nfa) {
-                if (state == nfaState.state) {
-                    if (nfaState.finish) isFinal = true;
-                    for (const auto& dest : nfaState.route_a) newStateA.insert(dest);
-                    for (const auto& dest : nfaState.route_b) newStateB.insert(dest);
-                }
-            }
-        }
-        if (!newStateA.empty()) {
-            string newStateNameA = convertSetToStateName(newStateA);
-            transitionMapA[convertSetToStateName(currentStateSet)].insert(newStateNameA);
-            addStateToDFA(dfa, stateQueue, visitedStates, newStateA, false, isFinalState(newStateNameA, nfa));
-        }
-        if (!newStateB.empty()) {
-            string newStateNameB = convertSetToStateName(newStateB);
-            transitionMapB[convertSetToStateName(currentStateSet)].insert(newStateNameB);
-            addStateToDFA(dfa, stateQueue, visitedStates, newStateB, false, isFinalState(newStateNameB, nfa));
-        }
-    }
-    for (auto& dfaState : dfa) {
-        if (transitionMapA.find(dfaState.state) != transitionMapA.end()) {
-            for (const auto& transState : transitionMapA[dfaState.state]) {
-                dfaState.route_a.push_back(transState); // Convert set<string> to vector<string> if necessary
-            }
-        }
-        if (transitionMapB.find(dfaState.state) != transitionMapB.end()) {
-            for (const auto& transState : transitionMapB[dfaState.state]) {
-                dfaState.route_b.push_back(transState);
+bool isFinalState(const string& compositeState, const vector<StateProps>& dfa) {
+    // Split the compositeState into individual states
+    stringstream ss(compositeState);
+    string state;
+    while (getline(ss, state, '/')) { // Assuming '/' is the delimiter
+        // Check each state in the composite state
+        for (const auto& dfaState : dfa) {
+            if (dfaState.state == state && dfaState.finish) {
+                return true; // Return true if any of the states is a final state
             }
         }
     }
-
-    return dfa;
+    return false; // Return false if none of the states are final states
 }
+
+
 
 void printStates(const vector<StateProps>& states) {
     for (const auto& stateEntry : states) {
