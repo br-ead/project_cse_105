@@ -151,7 +151,6 @@ set<string> computeNextState(const string& currentState, char input, const vecto
                 }
             }
         }
-    }
     return nextStateSet;
 }
 
