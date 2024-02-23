@@ -80,16 +80,16 @@ string joinSet(const set<string>& stateSet) {
 }
 
 vector<StateProps> nfaToDFA(const vector<StateProps>& nfa) {
-    map<set<string>, StateProps> dfaStates; // Maps sets of NFA states to DFA states
-    map<set<string>, map<char, set<string>>> transitions; // DFA transitions
-    queue<set<string>> processingQueue; // Queue for processing sets of NFA states
+    map<set<string>, StateProps> dfa; // Holds the DFA states
+    map<set<string>, map<char, set<string>>> transitions; // Transition function for DFA
+    queue<set<string>> processingQueue; // Queue for processing states
 
-    // Find the initial NFA state(s) and add to the processing queue
+    // Identify the initial state and add it to the queue
     set<string> initialStateSet;
-    for (const auto& state : nfa) {
-        if (state.start) {
-            initialStateSet.insert(state.state);
-            break; // Assuming a single start state for simplicity
+    for (const auto& s : nfa) {
+        if (s.start) {
+            initialStateSet.insert(s.state);
+            break; // Assuming there's only one start state
         }
     }
     processingQueue.push(initialStateSet);
@@ -99,42 +99,56 @@ vector<StateProps> nfaToDFA(const vector<StateProps>& nfa) {
         set<string> currentSet = processingQueue.front();
         processingQueue.pop();
 
-        // Initialize a new DFA state for the current set if it doesn't already exist
-        if (dfaStates.find(currentSet) == dfaStates.end()) {
+        // Generate a unique name for the current DFA state
+        string dfaStateName = joinSet(currentSet);
+
+        // Check if this DFA state is already processed
+        if (dfa.find(currentSet) == dfa.end()) {
             StateProps newState;
-            newState.state = joinSet(currentSet); // Custom function to join set elements into a string
-            newState.start = (currentSet == initialStateSet); // Start state check
-            newState.finish = isFinalState(nfa, currentSet); // Custom function to check if any NFA state in the set is final
-            dfaStates[currentSet] = newState;
+            newState.state = dfaStateName;
+            newState.start = (currentSet == initialStateSet); // Mark as start if it matches the initial NFA state
+            newState.finish = isFinalState(nfa, currentSet); // Determine if this is a final state
+            
+            // Initialize empty transitions
+            newState.route_a = {};
+            newState.route_b = {};
+
+            dfa[currentSet] = newState;
         }
 
-        // For each symbol in the alphabet, calculate the reachable states and update the DFA
+        // Process transitions for 'a' and 'b'
         for (char symbol : {'a', 'b'}) {
-            set<string> reachableStates = getReachableStates(nfa, currentSet, symbol);
-            transitions[currentSet][symbol] = reachableStates;
-            if (!reachableStates.empty() && dfaStates.find(reachableStates) == dfaStates.end()) {
-                processingQueue.push(reachableStates);
+            set<string> newStateSet = getReachableStates(nfa, currentSet, symbol);
+            if (!newStateSet.empty()) {
+                transitions[currentSet][symbol] = newStateSet;
+                if (dfa.find(newStateSet) == dfa.end()) {
+                    processingQueue.push(newStateSet); // Process new state
+                }
             }
         }
     }
 
-    // Convert the map to a vector for the final DFA representation
-    vector<StateProps> dfa;
-    for (const auto& [stateSet, stateProps] : dfaStates) {
-        StateProps updatedState = stateProps;
+    // Update the DFA transitions based on transitions map
+    for (auto& [stateSet, stateProps] : dfa) {
         for (char symbol : {'a', 'b'}) {
-            set<string> targetSet = transitions[stateSet][symbol];
-            if (!targetSet.empty()) {
-                string targetState = joinSet(targetSet);
-                if (symbol == 'a') updatedState.route_a.push_back(targetState);
-                else updatedState.route_b.push_back(targetState);
+            if (transitions[stateSet].find(symbol) != transitions[stateSet].end()) {
+                set<string> targetSet = transitions[stateSet][symbol];
+                string targetStateName = joinSet(targetSet);
+                if (symbol == 'a') stateProps.route_a.push_back(targetStateName);
+                else stateProps.route_b.push_back(targetStateName);
             }
         }
-        dfa.push_back(updatedState);
     }
 
-    return dfa;
+    // Convert the map to a vector for the final DFA
+    vector<StateProps> dfaVector;
+    for (const auto& [_, stateProps] : dfa) {
+        dfaVector.push_back(stateProps);
+    }
+
+    return dfaVector;
 }
+
 void printDFA(const vector<StateProps>& dfa) {
     cout << "DFA States and Transitions:\n";
     for (const auto& state : dfa) {
