@@ -85,7 +85,7 @@ string convertSetToStateName(const set<string>& stateSet) {
     string stateName;
     for (const auto& state : stateSet) {
         if (!stateName.empty()) 
-        stateName = "[" + statenName + ",";
+        stateName = "[" + stateName + ",";
         stateName += state + "]" ;
     }
     return stateName;
