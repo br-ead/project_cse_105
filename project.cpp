@@ -184,45 +184,41 @@ void updateTransitionTable(const string& currentState, char input, const string&
 }
 
 void convertNFAtoDFA(const vector<StateProps>& nfa) {
-    // Find the initial state of the NFA
     string initialState = findInitialState(nfa);
-
-    // Initialize the DFA with the initial state
     vector<StateProps> dfa = initializeDFA(nfa, initialState);
-
-    // Create a queue to hold the new states of the DFA
     queue<string> newStates;
     newStates.push(initialState);
 
-    // Process each new state
     while (!newStates.empty()) {
         string currentState = newStates.front();
         newStates.pop();
 
-        // For each input symbol...
-        for (char input : {'a', 'b'}) { // assuming 'a' and 'b' are the input symbols
-            // Compute the new state for the current input
+        for (char input : {'a', 'b'}) {
             set<string> nextStateSet = computeNextState(currentState, input, nfa);
-
-            // Convert the set of states to a state name
             string nextState = convertSetToStateName(nextStateSet);
 
-            // If the new state is not already in the DFA...
-            if (!isStateInDFA(nextState, dfa)) {
-                // Add the new state to the DFA
-                dfa.push_back(createNewState(nextState, isCompositeFinal(nextStateSet, nfa)));
-
-                // Add the new state to the queue
+            // Check if nextState is meaningful before adding to DFA
+            if (!nextStateSet.empty() && !isStateInDFA(nextState, dfa)) {
+                StateProps newState = createNewState(nextState, isCompositeFinal(nextStateSet, nfa));
+                dfa.push_back(newState);
                 newStates.push(nextState);
             }
 
-            // Update the transition table for the current state and input
-            updateTransitionTable(currentState, input, nextState, dfa);
+            // Update the transition table only if nextState is not "null"
+            if (nextState != "null") {
+                updateTransitionTable(currentState, input, nextState, dfa);
+            }
         }
     }
 
+    // Filter out states with no valid transitions before printing
+    dfa.erase(remove_if(dfa.begin(), dfa.end(), [](const StateProps& state) {
+        return state.route_a.empty() && state.route_b.empty();
+    }), dfa.end());
+
     printStates(dfa);
 }
+
 
 
 int main(int argc, char *argv[]) {
