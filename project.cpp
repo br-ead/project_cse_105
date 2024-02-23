@@ -291,68 +291,20 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
                 newStates.push(nextState);
             }
         }
-
-        // Directly updating the DFA state with aggregated transitions
         auto dfaIt = find_if(dfa.begin(), dfa.end(), [&](const StateProps& sp) { return sp.state == currentState; });
         if (dfaIt != dfa.end()) {
             dfaIt->route_a = currentStateTransA;
             dfaIt->route_b = currentStateTransB;
         } else {
-            // This handles the initial state specifically if it hasn't been added yet
             bool isFinal = isFinalState(currentState, nfa);
             StateProps initialState = createNewState(currentState, isFinal, currentStateTransA, currentStateTransB);
             dfa.push_back(initialState);
         }
     }
-
     addDeathStateIfNeeded(dfa);
     printStates(dfa);
 }
 
-/*
-void convertNFAtoDFA(const vector<StateProps>& nfa) {
-    string initialState = findInitialState(nfa);
-    vector<StateProps> dfa = initializeDFA(nfa, initialState);
-    queue<string> newStates;
-    newStates.push(initialState);
-
-    while (!newStates.empty()) {
-        string currentState = newStates.front();
-        newStates.pop();
-
-        for (char input : {'a', 'b'}) {
-            set<string> nextStateSet = computeNextState(currentState, input, nfa);
-            string nextState = convertSetToStateName(nextStateSet);
-
-            // Check if nextState is meaningful before adding to DFA
-            if (!nextStateSet.empty() && !isStateInDFA(nextState, dfa)) {
-                bool finalState = false;
-                for (const string& state : nextStateSet) {
-                    if (isFinalState(state, dfa)) {
-                        finalState = true;
-                        break;
-                    }
-                }
-                StateProps newState = createNewState(nextState, finalState);
-                dfa.push_back(newState);
-                newStates.push(nextState);
-            }
-
-            // Update the transition table only if nextState is not "null"
-            if (nextState != "null") {
-                updateTransitionTable(currentState, input, nextState, dfa);
-            }
-        }
-    }
-
-    // Filter out states with no valid transitions before printing
-    dfa.erase(remove_if(dfa.begin(), dfa.end(), [](const StateProps& state) {
-        return state.route_a.empty() && state.route_b.empty();
-    }), dfa.end()); 
-    addDeathStateIfNeeded(dfa);
-    printStates(dfa);
-} 
-*/
 // using all of my functions generate a nfatodfa function that takes in an nfa and makes a resulting dfa based off of subset construction. 
 // Also print it using my previous function
 
