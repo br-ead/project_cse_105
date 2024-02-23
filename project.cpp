@@ -140,62 +140,52 @@ void printStates(const vector<StateProps>& states) {
 // self explanatory
 
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
-    map<set<string>, string> compositeStateMap; // Maps sets of NFA state names to DFA state names
     vector<StateProps> dfa;
-    queue<set<string>> processQueue;
-    set<string> visitedCompositeStates;
+    map<set<string>, string> seenStates; // Tracks seen composite states
+    queue<set<string>> processingQueue;
 
-    // Initialize with the start state
-    string startState = findInitialState(nfa);
-    processQueue.push({startState});
-    visitedCompositeStates.insert(startState);
+    // Start with initial state
+    set<string> initialStateSet = {findInitialState(nfa)};
+    processingQueue.push(initialStateSet);
+    seenStates[initialStateSet] = convertSetToStateName(initialStateSet);
 
-    while (!processQueue.empty()) {
-        set<string> currentSet = processQueue.front();
-        processQueue.pop();
+    while (!processingQueue.empty()) {
+        set<string> currentStateSet = processingQueue.front();
+        processingQueue.pop();
+        string currentStateName = convertSetToStateName(currentStateSet);
 
-        string compositeStateName = convertSetToStateName(currentSet);
-
-        // Skip if this composite state has already been created
-        if (compositeStateMap.find(currentSet) != compositeStateMap.end()) continue;
-        compositeStateMap[currentSet] = compositeStateName;
-
+        // Prepare a new DFA state
         StateProps newState;
-        newState.state = compositeStateName;
-        newState.start = currentSet.count(startState) > 0;
-        newState.finish = false; // Determined below
+        newState.state = currentStateName;
+        newState.start = currentStateSet.find(findInitialState(nfa)) != currentStateSet.end();
+        newState.finish = isFinalState(currentStateName, dfa); // Check if any of the NFA states are final
 
-        map<char, set<string>> transitions; // Holds aggregated transitions for each symbol
+        map<char, set<string>> newTransitions;
 
-        // Aggregate transitions and check for final state
-        for (const auto& nfaStateName : currentSet) {
-            const auto& nfaState = *find_if(nfa.begin(), nfa.end(), [&nfaStateName](const StateProps& sp) {
-                return sp.state == nfaStateName;
-            });
-
-            if (nfaState.finish) newState.finish = true;
-
-            for (const auto& dest : nfaState.route_a) {
-                if (dest != "null") transitions['a'].insert(dest);
-            }
-            for (const auto& dest : nfaState.route_b) {
-                if (dest != "null") transitions['b'].insert(dest);
+        // Determine new transitions for the composite state
+        for (const string& nfaStateName : currentStateSet) {
+            const auto it = find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == nfaStateName; });
+            if (it != nfa.end()) {
+                for (const auto& [symbol, destinations] : it->transitions) {
+                    for (const string& dest : destinations) {
+                        newTransitions[symbol].insert(dest);
+                    }
+                }
             }
         }
 
-        // Process transitions to create or link to new composite states
-        for (const auto& [symbol, nextStates] : transitions) {
-            if (nextStates.empty()) continue;
-            string nextCompositeStateName = convertSetToStateName(nextStates);
-
-            // Check if the composite state is new and needs processing
-            if (visitedCompositeStates.find(nextCompositeStateName) == visitedCompositeStates.end()) {
-                processQueue.push(nextStates);
-                visitedCompositeStates.insert(nextCompositeStateName);
+        // Process new transitions
+        for (const auto& [symbol, destinations] : newTransitions) {
+            if (seenStates.find(destinations) == seenStates.end()) {
+                seenStates[destinations] = convertSetToStateName(destinations);
+                processingQueue.push(destinations);
             }
-
-            // Add the transition to the current DFA state
-            (symbol == 'a' ? newState.route_a : newState.route_b).push_back(nextCompositeStateName);
+            // Assigning transitions based on symbol
+            if(symbol == 'a') {
+                newState.route_a.push_back(seenStates[destinations]);
+            } else if(symbol == 'b') {
+                newState.route_b.push_back(seenStates[destinations]);
+            }
         }
 
         dfa.push_back(newState);
