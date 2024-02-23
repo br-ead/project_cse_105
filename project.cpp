@@ -165,12 +165,17 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
         // Assign transitions to current DFA state
         for (auto& state : dfa) {
             if (state.state == currentState) {
-                state.route_a = {joinStates(transitions['a'])};
-                state.route_b = {joinStates(transitions['b'])};
+                state.route_a = joinStates(transitions['a']);
+                state.route_b = joinStates(transitions['b']);
                 break;
             }
         }
     }
+
+    // Remove states with no transitions
+    dfa.erase(remove_if(dfa.begin(), dfa.end(),  {
+        return state.route_a.empty() && state.route_b.empty();
+    }), dfa.end());
 
     return dfa;
 }
