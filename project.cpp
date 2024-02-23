@@ -57,10 +57,10 @@ vector<StateProps> readStatesFromFile(const string& filename) {
 
 
 string findInitialState(const vector<StateProps>& nfa) {
-    for (const auto& stateName : nfa) {
-        if (stateName.start) {
-            cout << stateName.state;
-            return stateName.state;
+    for (const auto& stateNFA : nfa) {
+        if (stateNFA.start) {
+            cout << stateNFA.state;
+            return stateNFA.state;
         }
     }
     // Return an empty string if no start state is found
@@ -127,9 +127,8 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
     }
 
     // Add all new states to the DFA
-    for (const auto& newState : newStates) {
-        cout << newStates.state;
-        dfa.push_back(newStates);
+    for (const auto& newDFAState : newStates) {
+        dfa.push_back(newDFAState);
     }
 }
 
@@ -172,30 +171,21 @@ vector<StateProps> initializeDFA(const vector<StateProps>& nfa, const string& in
 }
 
 
-vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
-    vector<StateProps> dfa;
-    set<string> processedStates;
-
-    // Step 1: Determine initial state of DFA
-    string initialState = findInitialState(nfa);
-    dfa = initializeDFA(nfa, initialState);
-
-    // Step 2: State Expansion
-    queue<string> stateQueue;
-    stateQueue.push(initialState);
-    while (!stateQueue.empty()) {
-        string currentState = stateQueue.front();
-        stateQueue.pop();
-
-        // Step 3: Determine transitions on each input symbol
-        determineTransitions(dfa, nfa);
-
-        // Step 4: Identify new DFA states
-        identifyNewStates(dfa, nfa);
+void determineTransitions(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
+    // For each state in the DFA
+    for (auto& dfaState : dfa) {
+        // For each state in the NFA
+        for (const auto& nfaState : nfa) {
+            // If the DFA state contains the NFA state
+            if (dfaState.state.find(nfaState.state) != string::npos) {
+                // Add the transitions of the NFA state to the DFA state
+                dfaState.route_a.insert(nfaState.route_a.begin(), nfaState.route_a.end());
+                dfaState.route_b.insert(nfaState.route_b.begin(), nfaState.route_b.end());
+            }
+        }
     }
-
-    return dfa;
 }
+
 
 
 void printStates(const vector<StateProps>& states) {
