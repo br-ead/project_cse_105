@@ -189,10 +189,11 @@ void updateTransitionTable(const string& currentState, char input, const string&
                 dfa[i].route_b.clear();
                 dfa[i].route_b.push_back(nextState);
             }
-            break; // Assuming state names are unique, we can exit the loop once the state is found and updated
+            break; 
         }
     }
 }
+// this will be called after every iteration of the while loop in nfatodfa. 
 
 bool needsDeathState(const vector<StateProps>& dfa) {
     for (const auto& state : dfa) {
@@ -276,9 +277,9 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
     }
 
     // Filter out states with no valid transitions before printing
-    dfa.erase(remove_if(dfa.begin(), dfa.end(), [](const StateProps& state) {
+    /*dfa.erase(remove_if(dfa.begin(), dfa.end(), [](const StateProps& state) {
         return state.route_a.empty() && state.route_b.empty();
-    }), dfa.end());
+    }), dfa.end()); */
     addDeathStateIfNeeded(dfa);
     printStates(dfa);
 }
