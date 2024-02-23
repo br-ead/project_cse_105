@@ -135,6 +135,7 @@ bool isCompositeFinal(const set<string>& composite, const vector<StateProps>& nf
     }
     return false;
 }
+
 // Function to combine NFA states based on specific criteria for use in NFA to DFA conversion
 void combineNFAStatesForDFA(vector<StateProps>& nfa) {
     // Temporary container for newly created composite states
@@ -181,6 +182,9 @@ void combineNFAStatesForDFA(vector<StateProps>& nfa) {
 
     // Append the composite states to the NFA
     nfa.insert(nfa.end(), compositeStates.begin(), compositeStates.end());
+    for (const auto& stateEntry : nfa) {
+        cout << stateEntry.state << endl;
+    }
 }
 
 vector<StateProps> convertNFAtoDFA(vector<StateProps> nfa) {
