@@ -55,7 +55,6 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     return states;
 }
 
-
 string findInitialState(const vector<StateProps>& nfa) {
     for (const auto& stateNFA : nfa) {
         if (stateNFA.start) {
@@ -76,7 +75,6 @@ bool isFinalState(const string& state, const vector<StateProps>& dfa) {
     // If the state is not found or it's not a final state, return false
     return false;
 }
-
 
 void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
     vector<StateProps> newStates;
@@ -125,13 +123,28 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
 }
 
 
-void determineTransitions(vector<StateProps>& dfa, const vector<StateProps>& nfa) {                                   
+bool representsState(const string& dfaState, const string& nfaState) {
+    if (dfaState == nfaState) return true; // Direct match
+
+    // Split DFA state into components and check if any component matches the NFA state
+    vector<string> components;
+    size_t start = 0, end = 0;
+    while ((end = dfaState.find(',', start)) != string::npos) {
+        components.push_back(dfaState.substr(start, end - start));
+        start = end + 1;
+    }
+    components.push_back(dfaState.substr(start)); // Add the last component
+
+    return find(components.begin(), components.end(), nfaState) != components.end();
+}
+
+void determineTransitions(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
     // For each state in the DFA
     for (auto& dfaState : dfa) {
         // For each state in the NFA
         for (const auto& nfaState : nfa) {
             // If the DFA state contains the NFA state
-            if (dfaState.state.find(nfaState.state) != string::npos) {
+            if (representsState(dfaState.state, nfaState.state)) {
                 // Add the transitions of the NFA state to the DFA state
                 dfaState.route_a.insert(nfaState.route_a.begin(), nfaState.route_a.end());
                 dfaState.route_b.insert(nfaState.route_b.begin(), nfaState.route_b.end());
