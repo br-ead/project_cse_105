@@ -69,17 +69,6 @@ vector<StateProps> initializeDFA(const vector<StateProps>& nfa, const string& in
 }
 // We use this to make our starter DFA.
 
-/*
-bool isFinalState(const string& state, const vector<StateProps>& dfa) {
-    for (const auto& dfaState : dfa) {
-        if (dfaState.state == state && dfaState.finish) {
-            return true;
-        }
-    }
-    return false;
-}
-Used Chat GPT here, but this is my isFinalState check */
-
 bool isFinalState(const string& compositeState, const vector<StateProps>& dfa) {
     // Split the composite state into individual states
     stringstream ss(compositeState);
@@ -139,61 +128,61 @@ void printStates(const vector<StateProps>& states) {
 }
 // self explanatory
 
+bool isCompositeFinal(const set<string>& composite, const vector<StateProps>& nfa) {
+    for (const auto& state : composite) {
+        auto it = find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == state; });
+        if (it != nfa.end() && it->finish) return true;
+    }
+    return false;
+}
+
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
-    map<set<string>, string> seenStates; // Tracks seen composite states
-    queue<set<string>> processingQueue;
+    queue<set<string>> queue;
+    vector<set<string>> seenStates; // Track seen composite states
 
-    // Start with initial state
-    set<string> initialStateSet = {findInitialState(nfa)};
-    processingQueue.push(initialStateSet);
-    seenStates[initialStateSet] = convertSetToStateName(initialStateSet);
+    // Initialize with the start state
+    set<string> startState = { findInitialState(nfa) };
+    queue.push(startState);
+    seenStates.push_back(startState);
 
-    while (!processingQueue.empty()) {
-        set<string> currentStateSet = processingQueue.front();
-        processingQueue.pop();
-        string currentStateName = convertSetToStateName(currentStateSet);
+    while (!queue.empty()) {
+        set<string> currentComposite = queue.front();
+        queue.pop();
 
-        // Prepare a new DFA state
         StateProps newState;
-        newState.state = currentStateName;
-        newState.start = currentStateSet.find(findInitialState(nfa)) != currentStateSet.end();
-        newState.finish = isFinalState(currentStateName, dfa); // Check if any of the NFA states are final
+        newState.state = convertSetToStateName(currentComposite);
+        newState.start = (currentComposite.find(findInitialState(nfa)) != currentComposite.end());
+        newState.finish = isCompositeFinal(currentComposite, nfa);
 
-        map<char, set<string>> newTransitions;
+        set<string> nextCompositeA, nextCompositeB;
 
-        // Determine new transitions for the composite state
-        for (const string& nfaStateName : currentStateSet) {
-            const auto it = find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == nfaStateName; });
+        // Determine transitions for each symbol ('a' and 'b')
+        for (const auto& state : currentComposite) {
+            auto it = find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == state; });
             if (it != nfa.end()) {
-                for (const auto& [symbol, destinations] : it->transitions) {
-                    for (const string& dest : destinations) {
-                        newTransitions[symbol].insert(dest);
-                    }
-                }
+                for (const auto& dest : it->route_a) nextCompositeA.insert(dest);
+                for (const auto& dest : it->route_b) nextCompositeB.insert(dest);
             }
         }
 
-        // Process new transitions
-        for (const auto& [symbol, destinations] : newTransitions) {
-            if (seenStates.find(destinations) == seenStates.end()) {
-                seenStates[destinations] = convertSetToStateName(destinations);
-                processingQueue.push(destinations);
-            }
-            // Assigning transitions based on symbol
-            if(symbol == 'a') {
-                newState.route_a.push_back(seenStates[destinations]);
-            } else if(symbol == 'b') {
-                newState.route_b.push_back(seenStates[destinations]);
-            }
+        if (!nextCompositeA.empty() && find(seenStates.begin(), seenStates.end(), nextCompositeA) == seenStates.end()) {
+            queue.push(nextCompositeA);
+            seenStates.push_back(nextCompositeA);
         }
+        if (!nextCompositeB.empty() && find(seenStates.begin(), seenStates.end(), nextCompositeB) == seenStates.end()) {
+            queue.push(nextCompositeB);
+            seenStates.push_back(nextCompositeB);
+        }
+
+        newState.route_a.push_back(convertSetToStateName(nextCompositeA));
+        newState.route_b.push_back(convertSetToStateName(nextCompositeB));
 
         dfa.push_back(newState);
     }
 
     return dfa;
 }
-
 // implemented by chatGPt
 
 
