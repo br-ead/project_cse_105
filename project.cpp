@@ -173,6 +173,7 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     }
 
 // Remove states with no transitions
+// Remove states with no transitions
 dfa.erase(remove_if(dfa.begin(), dfa.end(),  {
     return state.route_a.empty() && state.route_b.empty();
 }), dfa.end());
