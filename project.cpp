@@ -209,11 +209,21 @@ bool needsDeathState(const vector<StateProps>& dfa) {
 }
 
 void addDeathStateIfNeeded(vector<StateProps>& dfa) {
-    if (!needsDeathState(dfa)) {
-        return; // No "death" state needed, return early
+    bool deathStateNeeded = false;
+
+    // First, determine if a "death" state is needed by checking existing transitions.
+    for (const auto& state : dfa) {
+        if (state.route_a.empty() || state.route_b.empty()) {
+            deathStateNeeded = true;
+            break;
+        }
     }
 
-    // Ensure the "death" state exists
+    if (!deathStateNeeded) {
+        return; // No "death" state needed, return early.
+    }
+
+    // Create and add the "death" state to DFA.
     StateProps deathState;
     deathState.state = "death";
     deathState.start = false;
@@ -222,7 +232,7 @@ void addDeathStateIfNeeded(vector<StateProps>& dfa) {
     deathState.route_b.push_back("death");
     dfa.push_back(deathState);
 
-    // Update states with missing transitions to include "death"
+    // Correctly update states with missing transitions to include "death".
     for (auto& state : dfa) {
         if (state.route_a.empty()) {
             state.route_a.push_back("death");
@@ -232,6 +242,7 @@ void addDeathStateIfNeeded(vector<StateProps>& dfa) {
         }
     }
 }
+
 
 
 void convertNFAtoDFA(const vector<StateProps>& nfa) {
