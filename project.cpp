@@ -166,27 +166,27 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
 }
 
 void printStates(const vector<StateProps>& states) {
-    for (const auto& state : states) {
-        cout << state.state << " is " << (state.start ? "" : "not ") << "a start state. ";
-        cout << "It is " << (state.finish ? "" : "not ") << "a finish state. When the input is a, it will route to ";
+    for (const auto& stateEntry : states) {
+        cout << stateEntry.state << " is " << (stateEntry.start ? "" : "not ") << "a start state. ";
+        cout << "It is " << (stateEntry.finish ? "" : "not ") << "a finish state. When the input is a, it will route to ";
         
-        if (state.route_a.empty()) {
+        if (stateEntry.route_a.empty()) {
             cout << "nothing";
         } else {
-            for (size_t i = 0; i < state.route_a.size(); ++i) {
-                cout << state.route_a[i];
-                if (i != state.route_a.size() - 1) {
+            for (size_t i = 0; i < stateEntry.route_a.size(); ++i) {
+                cout << stateEntry.route_a[i];
+                if (i != stateEntry.route_a.size() - 1) {
                     cout << ",";
                 }
             }
         }
         cout << " and when the input is b, it will route to ";
-        if (state.route_b.empty()) {
+        if (stateEntry.route_b.empty()) {
             cout << "nothing";
         } else {
-            for (size_t i = 0; i < state.route_b.size(); ++i) {
-                cout << state.route_b[i];
-                if (i != state.route_b.size() - 1) {
+            for (size_t i = 0; i < stateEntry.route_b.size(); ++i) {
+                cout << stateEntry.route_b[i];
+                if (i != stateEntry.route_b.size() - 1) {
                     cout << ",";
                 }
             }
