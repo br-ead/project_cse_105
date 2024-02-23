@@ -203,7 +203,7 @@ void updateTransitionTable(const string& currentState, char input, const string&
         }
     }
 }
-
+/*
 bool needsDeathState(const vector<StateProps>& dfa) {
     for (const auto& state : dfa) {
         if (state.route_a.empty() || state.route_b.empty()) {
@@ -275,7 +275,49 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
     addDeathStateIfNeeded(dfa);
     printStates(dfa);
 }
+*/
+void convertNFAtoDFA(const vector<StateProps>& nfa) {
+    // Initialize the DFA and the queue of new states
+    vector<StateProps> dfa;
+    queue<set<string>> newStates;
 
+    // Add the initial state to the DFA and the queue
+    set<string> initialState = { findInitialState(nfa) };
+    dfa.push_back(createNewState(convertSetToStateName(initialState), isCompositeFinal(initialState, nfa)));
+    newStates.push(initialState);
+
+    // Process each new state
+    while (!newStates.empty()) {
+        set<string> currentState = newStates.front();
+        newStates.pop();
+
+        // For each input symbol...
+        for (char input : {'a', 'b'}) { // assuming 'a' and 'b' are the input symbols
+            // Compute the new state for the current input
+            set<string> nextStateSet;
+            for (const string& state : currentState) {
+                set<string> routes = computeNextState(state, input, nfa);
+                nextStateSet.insert(routes.begin(), routes.end());
+            }
+
+            // Convert the set of states to a state name
+            string nextState = convertSetToStateName(nextStateSet);
+
+            // If the new state is not already in the DFA...
+            if (!isStateInDFA(nextState, dfa)) {
+                // Add the new state to the DFA and the queue
+                dfa.push_back(createNewState(nextState, isCompositeFinal(nextStateSet, nfa)));
+                newStates.push(nextStateSet);
+            }
+
+            // Update the transition table for the current state and input
+            updateTransitionTable(convertSetToStateName(currentState), input, nextState, dfa);
+        }
+    }
+
+    // Print the states of the DFA
+    printStates(dfa);
+}
 
 
 int main(int argc, char *argv[]) {
