@@ -185,7 +185,7 @@ void updateTransitionTable(const string& currentState, char input, const string&
 void ensureDeathState(vector<StateProps>& dfa) {
     // Check if the "death" state already exists
     auto it = find_if(dfa.begin(), dfa.end(), [](const StateProps& sp) { return sp.state == "death"; });
-    if (it == dfa.end()) {
+    if (it != dfa.end()) {
         // If not, add the "death" state
         StateProps deathState;
         deathState.state = "death";
