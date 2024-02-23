@@ -138,16 +138,24 @@ bool representsState(const string& dfaState, const string& nfaState) {
     return find(components.begin(), components.end(), nfaState) != components.end();
 }
 
+void addUniqueTransitions(vector<string>& dfaTransitions, const vector<string>& nfaTransitions) {
+    for (const auto& transition : nfaTransitions) {
+        if (find(dfaTransitions.begin(), dfaTransitions.end(), transition) == dfaTransitions.end()) {
+            dfaTransitions.push_back(transition);
+        }
+    }
+}
+
 void determineTransitions(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
     // For each state in the DFA
     for (auto& dfaState : dfa) {
         // For each state in the NFA
         for (const auto& nfaState : nfa) {
             // If the DFA state contains the NFA state
-            if (representsState(dfaState.state, nfaState.state)) {
-                // Add the transitions of the NFA state to the DFA state
-                dfaState.route_a.insert(nfaState.route_a.begin(), nfaState.route_a.end());
-                dfaState.route_b.insert(nfaState.route_b.begin(), nfaState.route_b.end());
+            if (dfaState.state.find(nfaState.state) != string::npos) {
+                // Add the transitions of the NFA state to the DFA state, avoiding duplicates
+                addUniqueTransitions(dfaState.route_a, nfaState.route_a);
+                addUniqueTransitions(dfaState.route_b, nfaState.route_b);
             }
         }
     }
