@@ -156,6 +156,7 @@ set<string> computeNextState(const string& currentState, char input, const vecto
 }
 
 
+
 bool isStateInDFA(const string& state, const vector<StateProps>& dfa) {
     return find_if(dfa.begin(), dfa.end(), [&](const StateProps& sp) { return sp.state == state; }) != dfa.end();
 }
