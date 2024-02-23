@@ -268,7 +268,9 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
             }
 
             // Update the transition table only if nextState is not "null"
-            updateTransitionTable(currentState, input, nextState, dfa);
+            if (nextState != "null") {
+                updateTransitionTable(currentState, input, nextState, dfa);
+            }
         }
         
     }
