@@ -81,7 +81,7 @@ bool isFinalState(const string& state, const vector<StateProps>& dfa) {
 Used Chat GPT here, but this is my isFinalState check */
 
 bool isFinalState(const string& compositeState, const vector<StateProps>& dfa) {
-    // Split the compositeState into individual states
+    // Split the composite state into individual states
     stringstream ss(compositeState);
     string state;
     while (getline(ss, state, '/')) { // Assuming '/' is the delimiter
@@ -95,6 +95,17 @@ bool isFinalState(const string& compositeState, const vector<StateProps>& dfa) {
     return false; // Return false if none of the states are final states
 }
 
+// Chat gpt work ^, basically iterates through the string, if either qi or qj is true then it is a finish state.
+
+string convertSetToStateName(const set<string>& stateSet) {
+    string stateName;
+    for (const auto& state : stateSet) {
+        if (!stateName.empty()) stateName += "/";
+        stateName += state;
+    }
+    return stateName.empty() ? "null" : stateName;
+}
+// Implemented by chat GPT ^
 
 
 void printStates(const vector<StateProps>& states) {
@@ -126,6 +137,74 @@ void printStates(const vector<StateProps>& states) {
         cout << endl;
     }
 }
+// self explanatory
+
+vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
+    vector<StateProps> dfa;
+    map<string, StateProps> stateMap; // Map to quickly find states by their name
+    for (const auto& state : nfa) {
+        stateMap[state.state] = state;
+    }
+
+    set<string> processed; // Keep track of processed states to avoid duplication
+    queue<string> toProcess; // Queue for states to process
+
+    string startState = findInitialState(nfa);
+    toProcess.push(startState);
+    processed.insert(startState);
+
+    while (!toProcess.empty()) {
+        string currentState = toProcess.front();
+        toProcess.pop();
+
+        // Create a new DFA state for the current set of NFA states
+        StateProps newState;
+        newState.state = currentState;
+        newState.start = (currentState == startState);
+        newState.finish = isFinalState(currentState, dfa); // Might need adjustment for composite states
+
+        // For each input symbol, determine the new state
+        set<string> newStatesA, newStatesB;
+        stringstream ss(currentState);
+        string token;
+        while (getline(ss, token, '/')) {
+            if (stateMap[token].route_a.size() > 0) {
+                for (const auto& dest : stateMap[token].route_a) {
+                    if (dest != "null") newStatesA.insert(dest);
+                }
+            }
+            if (stateMap[token].route_b.size() > 0) {
+                for (const auto& dest : stateMap[token].route_b) {
+                    if (dest != "null") newStatesB.insert(dest);
+                }
+            }
+        }
+
+        // Convert sets to string representations for new states
+        string newStateA = convertSetToStateName(newStatesA);
+        string newStateB = convertSetToStateName(newStatesB);
+
+        // Check if new states need processing
+        if (newStatesA.size() > 0 && processed.find(newStateA) == processed.end()) {
+            toProcess.push(newStateA);
+            processed.insert(newStateA);
+        }
+        if (newStatesB.size() > 0 && processed.find(newStateB) == processed.end()) {
+            toProcess.push(newStateB);
+            processed.insert(newStateB);
+        }
+
+        // Store transitions in newState
+        if (newStatesA.size() > 0) newState.route_a.push_back(newStateA);
+        if (newStatesB.size() > 0) newState.route_b.push_back(newStateB);
+
+        dfa.push_back(newState);
+    }
+
+    return dfa;
+}
+// implemented by chatGPt
+
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
