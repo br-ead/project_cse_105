@@ -130,7 +130,7 @@ void printStates(const vector<StateProps>& states) {
 
 bool isCompositeFinal(const set<string>& composite, const vector<StateProps>& nfa) {
     for (const string& compState : composite) {
-        for (size_t i = 0; i < dfa.size(); ++i) {
+        for (size_t i = 0; i < nfa.size(); ++i) {
             if (nfa[i].state == compState && nfa[i].finish) {
                 return true; // If any of the composite states is a final state in the NFA, return true
             }
@@ -186,7 +186,7 @@ StateProps createNewState(const string& stateName, bool isFinal) {
 }
 
 void updateTransitionTable(const string& currentState, char input, const string& nextState, vector<StateProps>& dfa) {
-    for (size_t i = 0; i < nfa.size()+1; ++i) {
+    for (size_t i = 0; i < dfa.size()+1; ++i) {
         if (dfa[i].state == currentState) {
             if (input == 'a') {
                 dfa[i].route_a.clear();
