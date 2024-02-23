@@ -127,6 +127,7 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
 
     // Add all new states to the DFA
     for (const auto& newState : newStates) {
+        court << newState.state
         dfa.push_back(newState);
     }
 }
