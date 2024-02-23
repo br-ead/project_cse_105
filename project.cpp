@@ -46,7 +46,7 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     }
     return states;
 }
-
+// Iterate through file with contents like state-true-finish- etc.
 string findInitialState(const vector<StateProps>& nfa) {
     for (const auto& stateNFA : nfa) {
         if (stateNFA.start) {
@@ -140,63 +140,65 @@ void printStates(const vector<StateProps>& states) {
 // self explanatory
 
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
-    map<set<string>, StateProps> dfaStatesMap; // Maps sets of NFA states to DFA states for uniqueness
-    queue<set<string>> toProcess; // Queue for sets of NFA states to process
-    set<string> startStateSet = {findInitialState(nfa)};
+    map<set<string>, string> compositeStateMap; // Maps sets of NFA state names to DFA state names
+    vector<StateProps> dfa;
+    queue<set<string>> processQueue;
+    set<string> visitedCompositeStates;
 
-    toProcess.push(startStateSet);
+    // Initialize with the start state
+    string startState = findInitialState(nfa);
+    processQueue.push({startState});
+    visitedCompositeStates.insert(startState);
 
-    while (!toProcess.empty()) {
-        set<string> currentSet = toProcess.front();
-        toProcess.pop();
+    while (!processQueue.empty()) {
+        set<string> currentSet = processQueue.front();
+        processQueue.pop();
 
-        // Skip processing if this set of states has already been converted to a DFA state
-        if (dfaStatesMap.count(currentSet) > 0) continue;
+        string compositeStateName = convertSetToStateName(currentSet);
+
+        // Skip if this composite state has already been created
+        if (compositeStateMap.find(currentSet) != compositeStateMap.end()) continue;
+        compositeStateMap[currentSet] = compositeStateName;
 
         StateProps newState;
-        newState.state = convertSetToStateName(currentSet);
-        newState.start = currentSet.count(findInitialState(nfa)) > 0;
-        newState.finish = false; // Will be determined based on NFA states
+        newState.state = compositeStateName;
+        newState.start = currentSet.count(startState) > 0;
+        newState.finish = false; // Determined below
 
-        set<string> nextStateSetA;
-        set<string> nextStateSetB;
+        map<char, set<string>> transitions; // Holds aggregated transitions for each symbol
 
-        // Determine transitions and finality
-        for (const auto& stateName : currentSet) {
-            const auto& nfaState = find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == stateName; });
+        // Aggregate transitions and check for final state
+        for (const auto& nfaStateName : currentSet) {
+            const auto& nfaState = *find_if(nfa.begin(), nfa.end(), [&nfaStateName](const StateProps& sp) {
+                return sp.state == nfaStateName;
+            });
 
-            if (nfaState != nfa.end()) {
-                newState.finish = newState.finish || nfaState->finish; // Mark as final if any of the NFA states is final
+            if (nfaState.finish) newState.finish = true;
 
-                // Aggregate transitions for 'a'
-                for (const auto& dest : nfaState->route_a) {
-                    if (dest != "null") nextStateSetA.insert(dest);
-                }
-                // Aggregate transitions for 'b'
-                for (const auto& dest : nfaState->route_b) {
-                    if (dest != "null") nextStateSetB.insert(dest);
-                }
+            for (const auto& dest : nfaState.route_a) {
+                if (dest != "null") transitions['a'].insert(dest);
+            }
+            for (const auto& dest : nfaState.route_b) {
+                if (dest != "null") transitions['b'].insert(dest);
             }
         }
 
-        // Add transitions to newState
-        if (!nextStateSetA.empty()) {
-            newState.route_a.push_back(convertSetToStateName(nextStateSetA));
-            if (dfaStatesMap.count(nextStateSetA) == 0) toProcess.push(nextStateSetA); // Queue new state set for processing
-        }
-        if (!nextStateSetB.empty()) {
-            newState.route_b.push_back(convertSetToStateName(nextStateSetB));
-            if (dfaStatesMap.count(nextStateSetB) == 0) toProcess.push(nextStateSetB); // Queue new state set for processing
+        // Process transitions to create or link to new composite states
+        for (const auto& [symbol, nextStates] : transitions) {
+            if (nextStates.empty()) continue;
+            string nextCompositeStateName = convertSetToStateName(nextStates);
+
+            // Check if the composite state is new and needs processing
+            if (visitedCompositeStates.find(nextCompositeStateName) == visitedCompositeStates.end()) {
+                processQueue.push(nextStates);
+                visitedCompositeStates.insert(nextCompositeStateName);
+            }
+
+            // Add the transition to the current DFA state
+            (symbol == 'a' ? newState.route_a : newState.route_b).push_back(nextCompositeStateName);
         }
 
-        // Save the new DFA state
-        dfaStatesMap[currentSet] = newState;
-    }
-
-    // Convert map to vector for the result
-    vector<StateProps> dfa;
-    for (const auto& entry : dfaStatesMap) {
-        dfa.push_back(entry.second);
+        dfa.push_back(newState);
     }
 
     return dfa;
