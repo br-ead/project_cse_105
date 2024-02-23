@@ -133,7 +133,7 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
 }
 
 
-void determineTransitions(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
+void determineTransitions(vector<StateProps>& dfa, const vector<StateProps>& nfa) {                                   
     // For each state in the DFA
     for (auto& dfaState : dfa) {
         // For each state in the NFA
@@ -141,16 +141,8 @@ void determineTransitions(vector<StateProps>& dfa, const vector<StateProps>& nfa
             // If the DFA state contains the NFA state
             if (dfaState.state.find(nfaState.state) != string::npos) {
                 // Add the transitions of the NFA state to the DFA state
-                for (const auto& route : nfaState.route_a) {
-                    if (find(dfaState.route_a.begin(), dfaState.route_a.end(), route) == dfaState.route_a.end()) {
-                        dfaState.route_a.push_back(route);
-                    }
-                }
-                for (const auto& route : nfaState.route_b) {
-                    if (find(dfaState.route_b.begin(), dfaState.route_b.end(), route) == dfaState.route_b.end()) {
-                        dfaState.route_b.push_back(route);
-                    }
-                }
+                dfaState.route_a.insert(nfaState.route_a.begin(), nfaState.route_a.end());
+                dfaState.route_b.insert(nfaState.route_b.begin(), nfaState.route_b.end());
             }
         }
     }
@@ -170,22 +162,30 @@ vector<StateProps> initializeDFA(const vector<StateProps>& nfa, const string& in
     return dfa;
 }
 
+vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
+    vector<StateProps> dfa;
+    set<string> processedStates;
 
-void determineTransitions(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
-    // For each state in the DFA
-    for (auto& dfaState : dfa) {
-        // For each state in the NFA
-        for (const auto& nfaState : nfa) {
-            // If the DFA state contains the NFA state
-            if (dfaState.state.find(nfaState.state) != string::npos) {
-                // Add the transitions of the NFA state to the DFA state
-                dfaState.route_a.insert(nfaState.route_a.begin(), nfaState.route_a.end());
-                dfaState.route_b.insert(nfaState.route_b.begin(), nfaState.route_b.end());
-            }
-        }
+    // Step 1: Determine initial state of DFA
+    string initialState = findInitialState(nfa);
+    dfa = initializeDFA(nfa, initialState);
+
+    // Step 2: State Expansion
+    queue<string> stateQueue;
+    stateQueue.push(initialState);
+    while (!stateQueue.empty()) {
+        string currentState = stateQueue.front();
+        stateQueue.pop();
+
+        // Step 3: Determine transitions on each input symbol
+        determineTransitions(dfa, nfa);
+
+        // Step 4: Identify new DFA states
+        identifyNewStates(dfa, nfa);
     }
-}
 
+    return dfa;
+}
 
 
 void printStates(const vector<StateProps>& states) {
