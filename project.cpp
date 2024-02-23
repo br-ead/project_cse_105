@@ -59,11 +59,9 @@ vector<StateProps> readStatesFromFile(const string& filename) {
 string findInitialState(const vector<StateProps>& nfa) {
     for (const auto& stateNFA : nfa) {
         if (stateNFA.start) {
-            cout << stateNFA.state;
             return stateNFA.state;
         }
     }
-    // Return an empty string if no start state is found
     return "";
 }
 
@@ -82,54 +80,48 @@ bool isFinalState(const string& state, const vector<StateProps>& dfa) {
 
 void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
     vector<StateProps> newStates;
+    set<string> existingStateNames; // To efficiently check for existing states
+
+    // Populate existingStateNames with current DFA state names
+    for (const auto& state : dfa) {
+        existingStateNames.insert(state.state);
+    }
+
+    auto createStateName = [](const string& state1, const string& state2) -> string {
+        if (state1 == state2) {
+            return state1; // No need to create a composite if both states are the same
+        }
+        vector<string> parts = {state1, state2};
+        sort(parts.begin(), parts.end()); // Sort to ensure consistent naming
+        return "[" + parts[0] + "," + parts[1] + "]"; // Create composite name
+    };
 
     // For each state in the DFA
     for (auto& dfaState : dfa) {
-        // For each transition of the DFA state
-        for (const auto& route : dfaState.route_a) {
-            bool found = false;
-            string newStateName = (dfaState.state == route) ? dfaState.state : "[" + dfaState.state + "," + route + "]";
-            // Check if the state already exists in the DFA
-            for (const auto& state : dfa) {
-                if (state.state == newStateName) {
-                    found = true;
-                    break;
+        // Handle transitions for route_a and route_b similarly, consider wrapping in a function for reuse
+        auto handleRoute = [&](const vector<string>& route) {
+            for (const auto& targetState : route) {
+                string newStateName = createStateName(dfaState.state, targetState);
+
+                // Check if the composite state already exists
+                if (existingStateNames.find(newStateName) == existingStateNames.end()) {
+                    StateProps newState;
+                    newState.state = newStateName;
+                    newState.start = false;
+                    newState.finish = isFinalState(targetState, nfa); // Assuming isFinalState checks the NFA for finality
+                    newStates.push_back(newState);
+                    existingStateNames.insert(newStateName); // Add to existing state names to avoid duplicates
                 }
             }
-            // If the state does not exist, add it to the newStates
-            if (!found) {
-                StateProps newState;
-                newState.state = newStateName;
-                newState.start = false;
-                newState.finish = isFinalState(route, dfa);
-                newStates.push_back(newState);
-            }
-        }
-        for (const auto& route : dfaState.route_b) {
-            bool found = false;
-            string newStateName = (dfaState.state == route) ? dfaState.state : "[" + dfaState.state + "," + route + "]";
-            // Check if the state already exists in the DFA
-            for (const auto& state : dfa) {
-                if (state.state == newStateName) {
-                    found = true;
-                    break;
-                }
-            }
-            // If the state does not exist, add it to the newStates
-            if (!found) {
-                StateProps newState;
-                newState.state = newStateName;
-                newState.start = false;
-                newState.finish = isFinalState(route, dfa);
-                newStates.push_back(newState);
-            }
-        }
+        };
+
+        // Process transitions for route_a and route_b
+        handleRoute(dfaState.route_a);
+        handleRoute(dfaState.route_b);
     }
 
     // Add all new states to the DFA
-    for (const auto& newDFAState : newStates) {
-        dfa.push_back(newDFAState);
-    }
+    dfa.insert(dfa.end(), newStates.begin(), newStates.end());
 }
 
 
