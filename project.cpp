@@ -141,6 +141,7 @@ set<string> computeNextState(const string& currentState, char input, const vecto
     stringstream ss(currentState);
     string state;
     while (getline(ss, state, '/')) {
+        if (state.empty()) continue; // Skip empty states
         for (const auto& nfaState : nfa) {
             if (nfaState.state == state) {
                 const vector<string>& routes = (input == 'a') ? nfaState.route_a : nfaState.route_b;
@@ -150,6 +151,7 @@ set<string> computeNextState(const string& currentState, char input, const vecto
     }
     return nextStateSet;
 }
+
 
 bool isStateInDFA(const string& state, const vector<StateProps>& dfa) {
     return find_if(dfa.begin(), dfa.end(), [&](const StateProps& sp) { return sp.state == state; }) != dfa.end();
