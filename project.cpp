@@ -126,17 +126,6 @@ void printStates(const vector<StateProps>& states) {
 }
 // self explanatory
 
-bool isCompositeFinal(const set<string>& composite, const vector<StateProps>& nfa) {
-    for (const string& compState : composite) {
-        for (size_t i = 0; i < nfa.size(); ++i) {
-            if (nfa[i].state == compState && nfa[i].finish) {
-                return true; // If any of the composite states is a final state in the NFA, return true
-            }
-        }
-    }
-    return false; // If none of the composite states are final states, return false
-}
-
 set<string> computeNextState(const string& currentState, char input, const vector<StateProps>& nfa) {
     set<string> nextStateSet;
     stringstream ss(currentState);
@@ -155,7 +144,7 @@ set<string> computeNextState(const string& currentState, char input, const vecto
     }
     return nextStateSet;
 }
-
+// prompt -- Hello, I want to take in two values, route_a and route_b.
 
 bool isStateInDFA(const string& state, const vector<StateProps>& dfa) {
     // Check for exact match
@@ -173,7 +162,9 @@ bool isStateInDFA(const string& state, const vector<StateProps>& dfa) {
     }
 
     return false;
-}
+} 
+// prompt - hello I do not want states that are similar, i.e. q0/q1 and q1/0 can you make a way for me to only add values if they are 
+// not currently present?
 
 StateProps createNewState(const string& stateName, bool isFinal) {
     StateProps newState;
@@ -286,45 +277,7 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
     printStates(dfa);
 }
 
-/*
-void convertNFAtoDFA(const vector<StateProps>& nfa) {
-    string initialState = findInitialState(nfa);
-    vector<StateProps> dfa = initializeDFA(nfa, initialState);
-    queue<string> newStates;
-    newStates.push(initialState);
 
-    while (!newStates.empty()) {
-        string currentState = newStates.front();
-        newStates.pop();
-
-        for (char input : {'a', 'b'}) {
-            set<string> nextStateSet = computeNextState(currentState, input, nfa);
-            string nextState = convertSetToStateName(nextStateSet);
-
-            // Check if nextState is meaningful before adding to DFA
-            if (!nextStateSet.empty() && !isStateInDFA(nextState, dfa)) {
-                StateProps newState = createNewState(nextState, isFinalState(nextStateSet, dfa));
-                dfa.push_back(newState);
-                newStates.push(nextState);
-            }
-
-            // Update the transition table only if nextState is not "null"
-            if (nextState != "null") {
-                updateTransitionTable(currentState, input, nextState, dfa);
-            }
-        }
-        
-    }
-
-    // Filter out states with no valid transitions before printing
-    dfa.erase(remove_if(dfa.begin(), dfa.end(), [](const StateProps& state) {
-        return state.route_a.empty() && state.route_b.empty();
-    }), dfa.end());
-    addDeathStateIfNeeded(dfa);
-    printStates(dfa);
-}
-
-*/
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         cout << "Usage: " << argv[0] << " <filename>" << endl;
