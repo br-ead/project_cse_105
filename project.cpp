@@ -138,54 +138,61 @@ bool isCompositeFinal(const set<string>& composite, const vector<StateProps>& nf
 
 // Function to combine NFA states based on specific criteria for use in NFA to DFA conversion
 void combineNFAStatesForDFA(vector<StateProps>& nfa) {
-    // Temporary container for newly created composite states
-    vector<StateProps> compositeStates;
+    map<string, set<string>> reachabilityMap; // State to reachable states map
 
-    // Iterate through NFA to find states to combine
+    // Initialize direct reachability from routes
     for (const auto& state : nfa) {
-        // Check each route_a for potential combination
-        for (const auto& route : state.route_a) {
-            // Skip null routes or self-transitions
-            if (route == "null" || route == state.state) continue;
-
-            // Attempt to find the target state specified in route_a
-            const auto targetIt = find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) {
-                return sp.state == route;
-            });
-
-            // If target state is found and it's not itself, proceed to combine
-            if (targetIt != nfa.end()) {
-                StateProps compositeState;
-                set<string> combinedRoutesA, combinedRoutesB;
-
-                // Aggregate transitions from both states, avoiding duplicates
-                combinedRoutesA.insert(state.route_a.begin(), state.route_a.end());
-                combinedRoutesA.insert(targetIt->route_a.begin(), targetIt->route_a.end());
-
-                combinedRoutesB.insert(state.route_b.begin(), state.route_b.end());
-                combinedRoutesB.insert(targetIt->route_b.begin(), targetIt->route_b.end());
-
-                // Convert sets to vector and assign to composite state
-                compositeState.route_a = vector<string>(combinedRoutesA.begin(), combinedRoutesA.end());
-                compositeState.route_b = vector<string>(combinedRoutesB.begin(), combinedRoutesB.end());
-
-                // Composite state name and attributes
-                compositeState.state = state.state + "/" + route; // Custom logic for naming
-                compositeState.start = false; // Composite states derived here are typically not start states
-                compositeState.finish = state.finish || targetIt->finish; // Finish if either state is a finish state
-
-                // Add the composite state to the temporary container
-                compositeStates.push_back(compositeState);
-            }
+        for (const string& dest : state.route_a) {
+            if (dest != "null") reachabilityMap[state.state].insert(dest);
+        }
+        for (const string& dest : state.route_b) {
+            if (dest != "null") reachabilityMap[state.state].insert(dest);
         }
     }
 
-    // Append the composite states to the NFA
-    nfa.insert(nfa.end(), compositeStates.begin(), compositeStates.end());
-    for (const auto& stateEntry : nfa) {
-        cout << stateEntry.state << endl;
+    // Compute transitive closure for reachability
+    bool changed;
+    do {
+        changed = false;
+        for (auto& [state, reachable] : reachabilityMap) {
+            size_t beforeSize = reachable.size();
+            set<string> newReachable;
+            for (const auto& r : reachable) {
+                newReachable.insert(reachabilityMap[r].begin(), reachabilityMap[r].end());
+            }
+            reachable.insert(newReachable.begin(), newReachable.end());
+            if (beforeSize != reachable.size()) changed = true;
+        }
+    } while (changed);
+
+    // Generate composite states based on reachability
+    for (auto& [state, reachable] : reachabilityMap) {
+        if (reachable.size() > 1) { // Only consider states with more than one reachable state
+            StateProps compositeState;
+            compositeState.state = state; // Name of composite state is the base state's name
+            for (const auto& r : reachable) {
+                // Add all reachable states' routes to composite state
+                const auto& targetState = *find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == r; });
+                compositeState.route_a.insert(compositeState.route_a.end(), targetState.route_a.begin(), targetState.route_a.end());
+                compositeState.route_b.insert(compositeState.route_b.end(), targetState.route_b.begin(), targetState.route_b.end());
+            }
+            // Remove duplicates
+            sort(compositeState.route_a.begin(), compositeState.route_a.end());
+            compositeState.route_a.erase(unique(compositeState.route_a.begin(), compositeState.route_a.end()), compositeState.route_a.end());
+            sort(compositeState.route_b.begin(), compositeState.route_b.end());
+            compositeState.route_b.erase(unique(compositeState.route_b.begin(), compositeState.route_b.end()), compositeState.route_b.end());
+
+            // Determine if composite state is final
+            compositeState.finish = any_of(reachable.begin(), reachable.end(), [&](const string& rs) {
+                return find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == rs && sp.finish; }) != nfa.end();
+            });
+
+            // Add the composite state to NFA
+            nfa.push_back(compositeState);
+        }
     }
 }
+
 
 vector<StateProps> convertNFAtoDFA(vector<StateProps> nfa) {
     // Prepare the NFA by combining states as needed.
