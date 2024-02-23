@@ -81,12 +81,12 @@ set<string> findClosure(const vector<StateProps>& nfa, const set<string>& states
     return closure;
 }
 
-// Converts a set of NFA states into a DFA state (string representation)
 string convertSetToStateName(const set<string>& stateSet) {
     string stateName;
     for (const auto& state : stateSet) {
-        if (!stateName.empty()) stateName += ",";
-        stateName += state;
+        if (!stateName.empty()) 
+        stateName = "[" + statenName + ",";
+        stateName += state + "]" ;
     }
     return stateName;
 }
