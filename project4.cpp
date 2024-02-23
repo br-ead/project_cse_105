@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
+#include <set>
 using namespace std;
 
 struct StateProps {
