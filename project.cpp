@@ -129,12 +129,16 @@ void printStates(const vector<StateProps>& states) {
 // self explanatory
 
 bool isCompositeFinal(const set<string>& composite, const vector<StateProps>& nfa) {
-    for (const auto& state : composite) {
-        auto it = find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == state; });
-        if (it != nfa.end() && it->finish) return true;
+    for (const string& compState : composite) {
+        for (size_t i = 0; i < nfa.size(); ++i) {
+            if (nfa[i].state == compState && nfa[i].finish) {
+                return true; // If any of the composite states is a final state in the NFA, return true
+            }
+        }
     }
-    return false;
+    return false; // If none of the composite states are final states, return false
 }
+
 
 set<string> computeNextState(const string& currentState, char input, const vector<StateProps>& nfa) {
     set<string> nextStateSet;
@@ -169,17 +173,20 @@ StateProps createNewState(const string& stateName, bool isFinal) {
 }
 
 void updateTransitionTable(const string& currentState, char input, const string& nextState, vector<StateProps>& dfa) {
-    auto it = find_if(dfa.begin(), dfa.end(), [&](const StateProps& sp) { return sp.state == currentState; });
-    if (it != dfa.end()) {
-        if (input == 'a') {
-            it->route_a.clear();
-            it->route_a.push_back(nextState);
-        } else if (input == 'b') {
-            it->route_b.clear();
-            it->route_b.push_back(nextState);
+    for (size_t i = 0; i < dfa.size(); ++i) {
+        if (dfa[i].state == currentState) {
+            if (input == 'a') {
+                dfa[i].route_a.clear();
+                dfa[i].route_a.push_back(nextState);
+            } else if (input == 'b') {
+                dfa[i].route_b.clear();
+                dfa[i].route_b.push_back(nextState);
+            }
+            break; // Assuming state names are unique, we can exit the loop once the state is found and updated
         }
     }
 }
+
 bool needsDeathState(const vector<StateProps>& dfa) {
     for (const auto& state : dfa) {
         if (state.route_a.empty() || state.route_b.empty()) {
