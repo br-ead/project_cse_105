@@ -96,7 +96,7 @@ string convertSetToStateName(const set<string>& stateSet) {
 
 void addStateToDFA(vector<StateProps>& dfa, queue<set<string>>& stateQueue, set<string>& visitedStates, const set<string>& newState, bool isStart, bool isFinish) {
     string stateName = convertSetToStateName(newState);
-    cout << "----" + stateName "----";
+    cout << "----" + stateName + "----";
     if (visitedStates.find(stateName) == visitedStates.end()) {
         StateProps dfaState;
         dfaState.state = stateName;
