@@ -162,31 +162,6 @@ vector<StateProps> convertNFAToDFA(const vector<StateProps>& nfa) {
     return dfa;
 }
 
-// Function to update transition table
-void updateTransitionTable(const string& currentState, char input, const string& nextState, vector<StateProps>& dfa) {
-    for (auto& state : dfa) {
-        if (state.state == currentState) {
-            if (input == 'a') {
-                state.route_a.clear();
-                state.route_a.push_back(nextState);
-            } else if (input == 'b') {
-                state.route_b.clear();
-                state.route_b.push_back(nextState);
-            }
-            break;
-        }
-    }
-}
-
-// Function to convert set of states to state name
-string convertSetToStateName(const set<string>& stateSet) {
-    string stateName;
-    for (const auto& state : stateSet) {
-        if (!stateName.empty()) stateName += "/";
-        stateName += state;
-    }
-    return stateName.empty() ? "null" : stateName;
-}
 
 // Function to print DFA
 void printDFA(const vector<StateProps>& dfa) {
