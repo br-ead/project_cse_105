@@ -92,7 +92,7 @@ string convertSetToStateName(const set<string>& stateSet) {
         if (!stateName.empty()) stateName += "/";
         stateName += state;
     }
-    return stateName;
+    return stateName.empty() ? "null" : stateName;
 }
 // Implemented by chat GPT ^
 
