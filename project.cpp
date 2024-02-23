@@ -150,13 +150,16 @@ set<string> computeNextState(const string& currentState, char input, const vecto
             if (nfaState.state == state) {
                 const vector<string>& routes = (input == 'a') ? nfaState.route_a : nfaState.route_b;
                 for (const auto& route : routes) {
+                    if (!route.empty() && route != "null") { // Skip adding "null" routes
                         nextStateSet.insert(route);
                     }
                 }
             }
         }
+    }
     return nextStateSet;
 }
+
 
 
 
