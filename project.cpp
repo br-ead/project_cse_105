@@ -37,11 +37,11 @@ vector<StateProps> readStatesFromFile(const string& filename) {
                         s.route_a.push_back(token);
                     }
                 }
+            }
             else if (token != "y" && token != "null") {
                 s.route_b.push_back(token);
             }
             }
-        }
     states.push_back(s);
     }
     return states;
