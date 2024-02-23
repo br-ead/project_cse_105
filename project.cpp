@@ -249,7 +249,7 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
     dfa.erase(remove_if(dfa.begin(), dfa.end(), [](const StateProps& state) {
         return state.route_a.empty() && state.route_b.empty();
     }), dfa.end());
-    addDeadStateIfNeeded(dfa);
+    addDeathStateIfNeeded(dfa);
     printStates(dfa);
 }
 
