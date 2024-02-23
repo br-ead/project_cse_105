@@ -4,10 +4,6 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <set>
-#include <bitset>
-#include <queue>
-#include <map>
 
 using namespace std;
 
@@ -72,7 +68,7 @@ string findInitialState(const vector<StateProps>& nfa) {
 
 bool isFinalState(const string& state, const vector<StateProps>& dfa) {
     // Find the state in the DFA
-    auto it = find_if(dfa.begin(), dfa.end(), & {
+    auto it = find_if(dfa.begin(), dfa.end(), {
         return s.state == state;
     });
 
@@ -91,7 +87,7 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
         // For each transition of the DFA state
         for (const auto& route : {dfaState.route_a, dfaState.route_b}) {
             // If the transition leads to a new state
-            if (find_if(dfa.begin(), dfa.end(), & {
+            if (find_if(dfa.begin(), dfa.end(), {
                 return state.state == route;
             }) == dfa.end()) {
                 // Create the new state
@@ -110,7 +106,7 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
 
 bool isFinalState(const string& state, const vector<StateProps>& dfa) {
     // Find the state in the DFA
-    auto it = find_if(dfa.begin(), dfa.end(), & {
+    auto it = find_if(dfa.begin(), dfa.end(), {
         return s.state == state;
     });
 
