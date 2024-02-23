@@ -68,9 +68,24 @@ string findInitialState(const vector<StateProps>& nfa) {
 
 bool isFinalState(const string& state, const vector<StateProps>& dfa) {
     // Find the state in the DFA
-    auto it = find_if(dfa.begin(), dfa.end(), [&state](const StateProps& s) {
-        return s.state == state;
-    });
+for (const auto& route : dfaState.route_a) {
+    // If the transition leads to a new state
+    if (find_if(dfa.begin(), dfa.end(), &route {
+        return state.state == route;
+    }) == dfa.end()) {
+        ...
+    }
+}
+
+for (const auto& route : dfaState.route_b) {
+    // If the transition leads to a new state
+    if (find_if(dfa.begin(), dfa.end(), &route {
+        return state.state == route;
+    }) == dfa.end()) {
+        ...
+    }
+}
+
 
     // If the state is found and it's a final state, return true
     if (it != dfa.end() && it->finish) {
