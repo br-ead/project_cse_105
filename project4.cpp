@@ -3,7 +3,10 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <queue>
 #include <set>
+#include <map>
 using namespace std;
 
 struct StateProps {
@@ -18,243 +21,123 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     vector<StateProps> states;
     ifstream file(filename);
     string line;
-
     while (getline(file, line)) {
-        StateProps s;
         istringstream iss(line);
-        string start_str, finish_str, token;
-        if (!(iss >> s.state >> start_str >> finish_str)) { 
-            break; 
-        }
-        s.start = (start_str == "true");
-        s.finish = (finish_str == "true");
+        StateProps state;
+        string start, finish, symbol, target;
+        getline(iss, state.state, '-');
+        getline(iss, start, '-');
+        getline(iss, finish, '-');
+        state.start = (start == "true");
+        state.finish = (finish == "true");
 
-        // Read routes
-        while (getline(iss, token, '-')) {
-            if (token == "x") {
-                while (getline(iss, token, '-') && token != "y") {
-                    s.route_a.push_back(token);
-                }
-            } else if (token != "y") {
-                s.route_b.push_back(token);
-            }
+        // Read transitions for 'x' (symbol 'a')
+        getline(iss, symbol, '-'); // Should always be 'x'
+        while (getline(iss, target, '-') && target != "y") {
+            if (target != "null") state.route_a.push_back(target);
         }
 
-        states.push_back(s);
+        // Read transitions for 'y' (symbol 'b'), assuming 'y' has been consumed
+        while (getline(iss, target, '-') && !iss.eof()) {
+            if (target != "null") state.route_b.push_back(target);
+        }
+
+        states.push_back(state);
     }
-
     return states;
 }
 
-void printStates(const vector<StateProps>& states) {
-    for (const auto& state : states) {
-        cout << "State " << state.state << " is " << (state.start ? "" : "not ") << "a start state. ";
-        cout << "It is " << (state.finish ? "" : "not ") << "a finish state. When the input is a, it will route to ";
-        
-        if (state.route_a.empty()) {
-            cout << "nothing";
-        } else {
-            for (const auto& route : state.route_a) {
-                cout << route << "/";
-            }
-        }
-
-        cout << ". When the input is b, it will route to ";
-        
-        if (state.route_b.empty()) {
-            cout << "nothing";
-        } else {
-            for (const auto& route : state.route_b) {
-                cout << route << "/";
-            }
-        }
-
-        cout << endl;
+// Helper function to check if any NFA state in the set is a final state
+bool isFinalState(const vector<StateProps>& nfa, const set<string>& stateSet) {
+    for (const auto& s : stateSet) {
+        auto it = find_if(nfa.begin(), nfa.end(), [&s](const StateProps& sp) { return sp.state == s; });
+        if (it != nfa.end() && it->finish) return true;
     }
+    return false;
 }
 
-vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
-    vector<StateProps> dfa;
-
-    for (const auto& qA : nfa) {
-        for (const auto& qB : nfa) {
-            // Check if qA is routed to qB and itself with the same input
-            if ((find(qA.route_a.begin(), qA.route_a.end(), qB.state) != qA.route_a.end() && 
-                 find(qA.route_a.begin(), qA.route_a.end(), qA.state) != qA.route_a.end()) ||
-                (find(qA.route_b.begin(), qA.route_b.end(), qB.state) != qA.route_b.end() && 
-                 find(qA.route_b.begin(), qA.route_b.end(), qA.state) != qA.route_b.end())) {
-
-                // Combine qA and qB into a new state
-                StateProps newState;
-                newState.state = qA.state + "," + qB.state;
-                newState.start = qA.start || qB.start;
-                newState.finish = qA.finish || qB.finish;
-
-                // Merge the routes of qA and qB
-                newState.route_a.insert(newState.route_a.end(), qA.route_a.begin(), qA.route_a.end());
-                newState.route_a.insert(newState.route_a.end(), qB.route_a.begin(), qB.route_a.end());
-                newState.route_b.insert(newState.route_b.end(), qA.route_b.begin(), qA.route_b.end());
-                newState.route_b.insert(newState.route_b.end(), qB.route_b.begin(), qB.route_b.end());
-
-                // Add the new state to the DFA
-                dfa.push_back(newState);
+set<string> getReachableStates(const vector<StateProps>& nfa, const set<string>& states, char symbol) {
+    set<string> reachableStates;
+    for (const auto& currentState : states) {
+        for (const auto& nfaState : nfa) {
+            if (currentState == nfaState.state) {
+                const vector<string>& transitions = (symbol == 'a') ? nfaState.route_a : nfaState.route_b;
+                reachableStates.insert(transitions.begin(), transitions.end());
             }
         }
     }
-
-    return dfa;
+    return reachableStates;
 }
 
-/*
-vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
-    vector<StateProps> dfa;
-    set<vector<string>> processedRoutes;
+// Helper function to join set elements into a string
+string joinSet(const set<string>& stateSet) {
+    string result;
+    for (const auto& s : stateSet) {
+        if (!result.empty()) result += "_";
+        result += s;
+    }
+    return result;
+}
 
-    // Process each state in the NFA
-    for (const auto& qA : nfa) {
-        for (const auto& qB : nfa) {
-            // Combine states qA and qB into a new state
+vector<StateProps> nfaToDFA(const vector<StateProps>& nfa) {
+    map<set<string>, StateProps> dfaStates; // Maps sets of NFA states to DFA states
+    map<set<string>, map<char, set<string>>> transitions; // DFA transitions
+    queue<set<string>> processingQueue; // Queue for processing sets of NFA states
+
+    // Find the initial NFA state(s) and add to the processing queue
+    set<string> initialStateSet;
+    for (const auto& state : nfa) {
+        if (state.start) {
+            initialStateSet.insert(state.state);
+            break; // Assuming a single start state for simplicity
+        }
+    }
+    processingQueue.push(initialStateSet);
+    transitions[initialStateSet]; // Initialize transitions for the initial state
+
+    while (!processingQueue.empty()) {
+        set<string> currentSet = processingQueue.front();
+        processingQueue.pop();
+
+        // Initialize a new DFA state for the current set if it doesn't already exist
+        if (dfaStates.find(currentSet) == dfaStates.end()) {
             StateProps newState;
-            newState.state = "l" + qA.state + "," + qB.state + "l";
-            newState.start = qA.start || qB.start;
-            newState.finish = qA.finish || qB.finish;
+            newState.state = joinSet(currentSet); // Custom function to join set elements into a string
+            newState.start = (currentSet == initialStateSet); // Start state check
+            newState.finish = isFinalState(nfa, currentSet); // Custom function to check if any NFA state in the set is final
+            dfaStates[currentSet] = newState;
+        }
 
-            // Merge routes for input 'a'
-            for (const auto& routeA : qA.route_a) {
-                for (const auto& routeB : qB.route_a) {
-                    vector<string> mergedRoute = { routeA, routeB };
-                    sort(mergedRoute.begin(), mergedRoute.end());
-                    processedRoutes.insert(mergedRoute);
-                }
+        // For each symbol in the alphabet, calculate the reachable states and update the DFA
+        for (char symbol : {'a', 'b'}) {
+            set<string> reachableStates = getReachableStates(nfa, currentSet, symbol);
+            transitions[currentSet][symbol] = reachableStates;
+            if (!reachableStates.empty() && dfaStates.find(reachableStates) == dfaStates.end()) {
+                processingQueue.push(reachableStates);
             }
-
-            // Merge routes for input 'b'
-            for (const auto& routeA : qA.route_b) {
-                for (const auto& routeB : qB.route_b) {
-                    vector<string> mergedRoute = { routeA, routeB };
-                    sort(mergedRoute.begin(), mergedRoute.end());
-                    processedRoutes.insert(mergedRoute);
-                }
-            }
-
-            // Update the new state's routes
-            for (const auto& route : processedRoutes) {
-                if (route.size() == 2) {
-                    newState.route_a.push_back(route[0]);
-                    newState.route_b.push_back(route[1]);
-                }
-            }
-
-            // Add the new state to the DFA if not processed already
-            if (!newState.route_a.empty() || !newState.route_b.empty()) {
-                dfa.push_back(newState);
-            }
-
-            // Clear processed routes for next iteration
-            processedRoutes.clear();
         }
     }
 
-    return dfa;
-}
-*/
-vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
+    // Convert the map to a vector for the final DFA representation
     vector<StateProps> dfa;
-    set<set<string>> markedStates;  // Set of marked states in the DFA
-
-    // Create a start state for the DFA
-    set<string> startState = {nfa[0].state};  // Assuming the first state in 'nfa' is the start state
-    markedStates.insert(startState);
-
-    // Process each state in the DFA
-    for (const auto& dfaState : markedStates) {
-        StateProps newState;
-        newState.state = joinStates(dfaState);  // Function to join a set of states into a string
-        newState.start = containsStartState(dfaState, nfa);  // Function to check if 'dfaState' contains a start state of the NFA
-        newState.finish = containsFinishState(dfaState, nfa);  // Function to check if 'dfaState' contains a finish state of the NFA
-
-        // Process each possible input symbol
-        for (char symbol : {'a', 'b'}) {  // Assuming 'a' and 'b' are the input symbols
-            set<string> nextState;
-
-            // Compute the next state for the current DFA state and input symbol
-            for (const string& nfaState : dfaState) {
-                const vector<string>& routes = (symbol == 'a') ? getState(nfaState, nfa).route_a : getState(nfaState, nfa).route_b;  // Function to get the state in 'nfa' with the name 'nfaState'
-                nextState.insert(routes.begin(), routes.end());
+    for (const auto& [stateSet, stateProps] : dfaStates) {
+        StateProps updatedState = stateProps;
+        for (char symbol : {'a', 'b'}) {
+            set<string> targetSet = transitions[stateSet][symbol];
+            if (!targetSet.empty()) {
+                string targetState = joinSet(targetSet);
+                if (symbol == 'a') updatedState.route_a.push_back(targetState);
+                else updatedState.route_b.push_back(targetState);
             }
-
-            // If this set of NFA states is not already a state in the DFA, add it
-            if (markedStates.find(nextState) == markedStates.end()) {
-                markedStates.insert(nextState);
-            }
-
-            // Add the transition to the DFA
-            (symbol == 'a') ? newState.route_a.push_back(joinStates(nextState)) : newState.route_b.push_back(joinStates(nextState));
         }
-
-        // Add the new state to the DFA
-        dfa.push_back(newState);
+        dfa.push_back(updatedState);
     }
 
     return dfa;
 }
 
-int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        cout << "Usage: " << argv[0] << " <filename>" << endl;
-        return 1;
-    }
 
-    string filename = argv[1];
 
-    vector<StateProps> nfa = readStatesFromFile(filename);
-    printStates(nfa);
-
-    return 0;
-}
-void printDFA(const vector<StateProps>& dfa) {
-    cout << "DFA States and Transitions:\n";
-    for (const auto& state : dfa) {
-        cout << "State: " << state.state;
-        if (state.start) cout << " (Start State)";
-        if (state.finish) cout << " (Final State)";
-        cout << "\n";
-
-        // Print transitions for 'a'
-        if (!state.route_a.empty()) {
-            cout << "  On 'a' -> ";
-            for (const auto& dest : state.route_a) {
-                cout << dest << " ";
-            }
-            cout << "\n";
-        } else {
-            cout << "  On 'a' -> No Transition\n";
-        }
-
-        // Print transitions for 'b'
-        if (!state.route_b.empty()) {
-            cout << "  On 'b' -> ";
-            for (const auto& dest : state.route_b) {
-                cout << dest << " ";
-            }
-            cout << "\n";
-        } else {
-            cout << "  On 'b' -> No Transition\n";
-        }
-        cout << "\n"; // Add an extra newline for spacing
-    }
-}
-
-int main() {
-    // Assuming `filename` is the path to your input file with NFA definitions
-    string filename = "your_nfa_file.txt";
-    vector<StateProps> nfa = readStatesFromFile(filename);
-
-    // Convert NFA to DFA
-    vector<StateProps> dfa = nfaToDFA(nfa);
-
-    // Print the resulting DFA
-    printDFA(dfa);
 
     return 0;
 }
