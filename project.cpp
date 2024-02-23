@@ -194,7 +194,6 @@ void updateTransitionTable(const string& currentState, char input, const string&
     }
 }
 
-
 bool needsDeathState(const vector<StateProps>& dfa) {
     for (const auto& state : dfa) {
         if (state.route_a.empty() || state.route_b.empty()) {
@@ -283,7 +282,8 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
     addDeathStateIfNeeded(dfa);
     printStates(dfa);
 }
-
+// using all of my functions generate a nfatodfa function that takes in an nfa and makes a resulting dfa based off of subset construction. 
+// Also print it using my previous function
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
