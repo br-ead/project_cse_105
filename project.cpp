@@ -228,10 +228,10 @@ int main(int argc, char *argv[]) {
     // cout << "Read " << nfa.size() << " states from the file." << endl;
     cout << "This is the NFA" << endl;
     printStates(nfa);
-    convertNFAtoDFA(nfa);
+    vector<StateProps> dfa= convertNFAtoDFA(nfa);
     //vector<StateProps> dfa=convertNFAtoDFA(nfa);
     cout << "This is the DFA" << endl;
-    printStates(nfa);
+    printStates(dfa);
 
     return 0;
 }
