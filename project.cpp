@@ -144,7 +144,8 @@ set<string> computeNextState(const string& currentState, char input, const vecto
     }
     return nextStateSet;
 }
-// prompt -- Hello, I want to take in two values, route_a and route_b.
+// prompt -- Hello, I want to take in two values, route_a and route_b and computes the NextState based off of the adjustments 
+// made in updateTransitionTable
 
 bool isStateInDFA(const string& state, const vector<StateProps>& dfa) {
     // Check for exact match
@@ -169,7 +170,7 @@ bool isStateInDFA(const string& state, const vector<StateProps>& dfa) {
 StateProps createNewState(const string& stateName, bool isFinal) {
     StateProps newState;
     newState.state = stateName;
-    newState.start = false; // New states are never start states
+    newState.start = false; // New states are never start states :D
     newState.finish = isFinal;
     return newState;
 }
@@ -198,6 +199,8 @@ bool needsDeathState(const vector<StateProps>& dfa) {
     }
     return false;
 }
+
+// create sink
 
 void addDeathStateIfNeeded(vector<StateProps>& dfa) {
     bool deathStateNeeded = false;
