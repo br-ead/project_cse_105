@@ -47,6 +47,7 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     return states;
 }
 // Iterate through file with contents like state-true-finish- etc.
+
 string findInitialState(const vector<StateProps>& nfa) {
     for (const auto& stateNFA : nfa) {
         if (stateNFA.start) {
@@ -291,14 +292,10 @@ int main(int argc, char *argv[]) {
     string filename = argv[1];
     
     vector<StateProps> nfa = readStatesFromFile(filename);
-    // cout << "Read " << nfa.size() << " states from the file." << endl;
-    //cout << "This is the NFA" << endl;
-    //printStates(nfa);
-    //vector<StateProps> dfa= convertNFAtoDFA(nfa);
-    //vector<StateProps> dfa=convertNFAtoDFA(nfa);
+    //cout << "Read " << nfa.size() << " states from the file." << endl;
+    cout << "This is the NFA" << endl;
+    printStates(nfa);
     cout << "This is the DFA" << endl;
-    // printStates(dfa);
-
     convertNFAtoDFA(nfa);
 
     return 0;
