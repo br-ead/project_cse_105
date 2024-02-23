@@ -80,6 +80,8 @@ bool isFinalState(const string& state, const vector<StateProps>& dfa) {
 
 
 void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
+    vector<StateProps> newStates;
+
     // For each state in the DFA
     for (auto& dfaState : dfa) {
         // For each transition of the DFA state
@@ -87,40 +89,46 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
             bool found = false;
             // Check if the state already exists in the DFA
             for (const auto& state : dfa) {
-                if (state.state == "[" + dfaState.state + "," + route + "]") {
+                if (state.state == "[" + dfaState.state + "," + route + "]" || state.state == "[" + route + "," + dfaState.state + "]") {
                     found = true;
                     break;
                 }
             }
-            // If the state does not exist, add it to the DFA
+            // If the state does not exist, add it to the newStates
             if (!found) {
                 StateProps newState;
                 newState.state = "[" + dfaState.state + "," + route + "]";
                 newState.start = false;
                 newState.finish = isFinalState(route, dfa);
-                dfa.push_back(newState);
+                newStates.push_back(newState);
             }
         }
         for (const auto& route : dfaState.route_b) {
             bool found = false;
             // Check if the state already exists in the DFA
             for (const auto& state : dfa) {
-                if (state.state == "[" + dfaState.state + "," + route + "]") {
+                if (state.state == "[" + dfaState.state + "," + route + "]" || state.state == "[" + route + "," + dfaState.state + "]") {
                     found = true;
                     break;
                 }
             }
-            // If the state does not exist, add it to the DFA
+            // If the state does not exist, add it to the newStates
             if (!found) {
                 StateProps newState;
                 newState.state = "[" + dfaState.state + "," + route + "]";
                 newState.start = false;
                 newState.finish = isFinalState(route, dfa);
-                dfa.push_back(newState);
+                newStates.push_back(newState);
             }
         }
     }
+
+    // Add all new states to the DFA
+    for (const auto& newState : newStates) {
+        dfa.push_back(newState);
+    }
 }
+
 
 void determineTransitions(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
     // For each state in the DFA
