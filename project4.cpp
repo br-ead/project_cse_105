@@ -136,8 +136,16 @@ vector<StateProps> nfaToDFA(const vector<StateProps>& nfa) {
     return dfa;
 }
 
+int main() {
+    // Assuming `filename` is the path to your input file with NFA definitions
+    string filename = "your_nfa_file.txt";
+    vector<StateProps> nfa = readStatesFromFile(filename);
 
+    // Convert NFA to DFA
+    vector<StateProps> dfa = nfaToDFA(nfa);
 
+    // Print the resulting DFA
+    printDFA(dfa);
 
     return 0;
 }
