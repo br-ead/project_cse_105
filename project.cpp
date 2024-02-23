@@ -57,9 +57,10 @@ vector<StateProps> readStatesFromFile(const string& filename) {
 
 
 string findInitialState(const vector<StateProps>& nfa) {
-    for (const auto& state : nfa) {
-        if (state.start) {
-            return state.state;
+    for (const auto& stateName : nfa) {
+        if (stateName.start) {
+            cout << stateName.state;
+            return stateName.state;
         }
     }
     // Return an empty string if no start state is found
