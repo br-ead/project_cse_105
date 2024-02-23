@@ -75,9 +75,9 @@ bool isFinalState(const string& compositeState, const vector<StateProps>& dfa) {
     while (getline(ss, state, '/')) {
         cout << "test" << endl;
         for (const auto& dfaState : dfa) {
-            cout << "test2" << endl;
-            cout << dfaState.state;
-            if (dfaState.state == state && dfaState.finish) {
+            //cout << "test2" << endl;
+            //cout << dfaState.state;
+            if (/*dfaState.state == state &&*/ dfaState.finish) {
                 cout << dfaState.state << " lol " << endl;
                 return true; // Return true if any of the states is a final state
             }
