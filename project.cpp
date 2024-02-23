@@ -140,69 +140,68 @@ void printStates(const vector<StateProps>& states) {
 // self explanatory
 
 vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
-    vector<StateProps> dfa;
-    map<string, StateProps> stateMap; // Map to quickly find states by their name
-    for (const auto& state : nfa) {
-        stateMap[state.state] = state;
-    }
+    map<set<string>, StateProps> dfaStatesMap; // Maps sets of NFA states to DFA states for uniqueness
+    queue<set<string>> toProcess; // Queue for sets of NFA states to process
+    set<string> startStateSet = {findInitialState(nfa)};
 
-    set<string> processed; // Keep track of processed states to avoid duplication
-    queue<string> toProcess; // Queue for states to process
-
-    string startState = findInitialState(nfa);
-    toProcess.push(startState);
-    processed.insert(startState);
+    toProcess.push(startStateSet);
 
     while (!toProcess.empty()) {
-        string currentState = toProcess.front();
+        set<string> currentSet = toProcess.front();
         toProcess.pop();
 
-        // Create a new DFA state for the current set of NFA states
+        // Skip processing if this set of states has already been converted to a DFA state
+        if (dfaStatesMap.count(currentSet) > 0) continue;
+
         StateProps newState;
-        newState.state = currentState;
-        newState.start = (currentState == startState);
-        newState.finish = isFinalState(currentState, dfa); // Might need adjustment for composite states
+        newState.state = convertSetToStateName(currentSet);
+        newState.start = currentSet.count(findInitialState(nfa)) > 0;
+        newState.finish = false; // Will be determined based on NFA states
 
-        // For each input symbol, determine the new state
-        set<string> newStatesA, newStatesB;
-        stringstream ss(currentState);
-        string token;
-        while (getline(ss, token, '/')) {
-            if (stateMap[token].route_a.size() > 0) {
-                for (const auto& dest : stateMap[token].route_a) {
-                    if (dest != "null") newStatesA.insert(dest);
+        set<string> nextStateSetA;
+        set<string> nextStateSetB;
+
+        // Determine transitions and finality
+        for (const auto& stateName : currentSet) {
+            const auto& nfaState = find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == stateName; });
+
+            if (nfaState != nfa.end()) {
+                newState.finish = newState.finish || nfaState->finish; // Mark as final if any of the NFA states is final
+
+                // Aggregate transitions for 'a'
+                for (const auto& dest : nfaState->route_a) {
+                    if (dest != "null") nextStateSetA.insert(dest);
+                }
+                // Aggregate transitions for 'b'
+                for (const auto& dest : nfaState->route_b) {
+                    if (dest != "null") nextStateSetB.insert(dest);
                 }
             }
-            if (stateMap[token].route_b.size() > 0) {
-                for (const auto& dest : stateMap[token].route_b) {
-                    if (dest != "null") newStatesB.insert(dest);
-                }
-            }
         }
 
-        // Convert sets to string representations for new states
-        string newStateA = convertSetToStateName(newStatesA);
-        string newStateB = convertSetToStateName(newStatesB);
-
-        // Check if new states need processing
-        if (newStatesA.size() > 0 && processed.find(newStateA) == processed.end()) {
-            toProcess.push(newStateA);
-            processed.insert(newStateA);
+        // Add transitions to newState
+        if (!nextStateSetA.empty()) {
+            newState.route_a.push_back(convertSetToStateName(nextStateSetA));
+            if (dfaStatesMap.count(nextStateSetA) == 0) toProcess.push(nextStateSetA); // Queue new state set for processing
         }
-        if (newStatesB.size() > 0 && processed.find(newStateB) == processed.end()) {
-            toProcess.push(newStateB);
-            processed.insert(newStateB);
+        if (!nextStateSetB.empty()) {
+            newState.route_b.push_back(convertSetToStateName(nextStateSetB));
+            if (dfaStatesMap.count(nextStateSetB) == 0) toProcess.push(nextStateSetB); // Queue new state set for processing
         }
 
-        // Store transitions in newState
-        if (newStatesA.size() > 0) newState.route_a.push_back(newStateA);
-        if (newStatesB.size() > 0) newState.route_b.push_back(newStateB);
+        // Save the new DFA state
+        dfaStatesMap[currentSet] = newState;
+    }
 
-        dfa.push_back(newState);
+    // Convert map to vector for the result
+    vector<StateProps> dfa;
+    for (const auto& entry : dfaStatesMap) {
+        dfa.push_back(entry.second);
     }
 
     return dfa;
 }
+
 // implemented by chatGPt
 
 
