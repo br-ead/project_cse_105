@@ -325,7 +325,7 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
             string nextState = convertSetToStateName(nextStateSet);
 
             // Check if nextState is meaningful before adding to DFA
-            if (/*!nextStateSet.empty() &&*/ !isStateInDFA(nextState, dfa)) {
+            if (!nextStateSet.empty() && !isStateInDFA(nextState, dfa)) {
                 bool finalState = false;
                 for (const string& state : nextStateSet) {
                     if (isFinalState(state, dfa)) {
@@ -351,7 +351,8 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
     }), dfa.end()); 
     addDeathStateIfNeeded(dfa);
     printStates(dfa);
-} */
+} 
+*/
 // using all of my functions generate a nfatodfa function that takes in an nfa and makes a resulting dfa based off of subset construction. 
 // Also print it using my previous function
 
