@@ -208,8 +208,8 @@ int main(int argc, char *argv[]) {
     //cout << "This is the NFA" << endl;
     // printStates(nfa);
     vector<StateProps> dfa=convertNFAtoDFA(nfa);
-    //cout << "This is the DFA" << endl;
-    //printStates(dfa);
+    cout << "This is the DFA" << endl;
+    printStates(dfa);
 
     return 0;
 }
