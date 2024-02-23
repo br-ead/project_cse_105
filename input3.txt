@@ -1,2 +1,2 @@
 q0-true-false-x-q0-q1-y-q0
-q1-false-true-x-null-y-q0
+q1-false-false-x-null-y-q0
