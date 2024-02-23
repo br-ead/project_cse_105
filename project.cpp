@@ -234,5 +234,7 @@ int main(int argc, char *argv[]) {
     cout << "This is the DFA" << endl;
     // printStates(dfa);
 
+    convertNFAtoDFA(nfa);
+
     return 0;
 }
