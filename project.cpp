@@ -189,10 +189,10 @@ void updateTransitionTable(const string& currentState, char input, const string&
     for (size_t i = 0; i < dfa.size(); ++i) {
         if (dfa[i].state == currentState) {
             if (input == 'a') {
-                // dfa[i].route_a.clear();
+                dfa[i].route_a.clear();
                 dfa[i].route_a.push_back(nextState);
             } else if (input == 'b') {
-                // dfa[i].route_b.clear();
+                dfa[i].route_b.clear();
                 dfa[i].route_b.push_back(nextState);
             }
             break; // Assuming state names are unique, we can exit the loop once the state is found and updated
