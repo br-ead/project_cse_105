@@ -87,9 +87,10 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
         // For each transition of the DFA state
         for (const auto& route : dfaState.route_a) {
             bool found = false;
+            string newStateName = (dfaState.state == route) ? dfaState.state : "[" + dfaState.state + "," + route + "]";
             // Check if the state already exists in the DFA
             for (const auto& state : dfa) {
-                if (state.state == "[" + dfaState.state + "," + route + "]" || state.state == "[" + route + "," + dfaState.state + "]") {
+                if (state.state == newStateName) {
                     found = true;
                     break;
                 }
@@ -97,7 +98,7 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
             // If the state does not exist, add it to the newStates
             if (!found) {
                 StateProps newState;
-                newState.state = "[" + dfaState.state + "," + route + "]";
+                newState.state = newStateName;
                 newState.start = false;
                 newState.finish = isFinalState(route, dfa);
                 newStates.push_back(newState);
@@ -105,9 +106,10 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
         }
         for (const auto& route : dfaState.route_b) {
             bool found = false;
+            string newStateName = (dfaState.state == route) ? dfaState.state : "[" + dfaState.state + "," + route + "]";
             // Check if the state already exists in the DFA
             for (const auto& state : dfa) {
-                if (state.state == "[" + dfaState.state + "," + route + "]" || state.state == "[" + route + "," + dfaState.state + "]") {
+                if (state.state == newStateName) {
                     found = true;
                     break;
                 }
@@ -115,7 +117,7 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
             // If the state does not exist, add it to the newStates
             if (!found) {
                 StateProps newState;
-                newState.state = "[" + dfaState.state + "," + route + "]";
+                newState.state = newStateName;
                 newState.start = false;
                 newState.finish = isFinalState(route, dfa);
                 newStates.push_back(newState);
