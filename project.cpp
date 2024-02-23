@@ -135,55 +135,54 @@ bool isCompositeFinal(const set<string>& composite, const vector<StateProps>& nf
     }
     return false;
 }
+// Function to combine NFA states based on specific criteria for use in NFA to DFA conversion
+void combineNFAStatesForDFA(vector<StateProps>& nfa) {
+    // Temporary container for newly created composite states
+    vector<StateProps> compositeStates;
 
-vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
-    vector<StateProps> dfa;
-    queue<set<string>> queue;
-    vector<set<string>> seenStates; // Track seen composite states
+    // Iterate through NFA to find states to combine
+    for (const auto& state : nfa) {
+        // Check each route_a for potential combination
+        for (const auto& route : state.route_a) {
+            // Skip null routes or self-transitions
+            if (route == "null" || route == state.state) continue;
 
-    // Initialize with the start state
-    set<string> startState = { findInitialState(nfa) };
-    queue.push(startState);
-    seenStates.push_back(startState);
+            // Attempt to find the target state specified in route_a
+            const auto targetIt = find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) {
+                return sp.state == route;
+            });
 
-    while (!queue.empty()) {
-        set<string> currentComposite = queue.front();
-        queue.pop();
+            // If target state is found and it's not itself, proceed to combine
+            if (targetIt != nfa.end()) {
+                StateProps compositeState;
+                set<string> combinedRoutesA, combinedRoutesB;
 
-        StateProps newState;
-        newState.state = convertSetToStateName(currentComposite);
-        newState.start = (currentComposite.find(findInitialState(nfa)) != currentComposite.end());
-        newState.finish = isCompositeFinal(currentComposite, nfa);
+                // Aggregate transitions from both states, avoiding duplicates
+                combinedRoutesA.insert(state.route_a.begin(), state.route_a.end());
+                combinedRoutesA.insert(targetIt->route_a.begin(), targetIt->route_a.end());
 
-        set<string> nextCompositeA, nextCompositeB;
+                combinedRoutesB.insert(state.route_b.begin(), state.route_b.end());
+                combinedRoutesB.insert(targetIt->route_b.begin(), targetIt->route_b.end());
 
-        // Determine transitions for each symbol ('a' and 'b')
-        for (const auto& state : currentComposite) {
-            auto it = find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == state; });
-            if (it != nfa.end()) {
-                for (const auto& dest : it->route_a) nextCompositeA.insert(dest);
-                for (const auto& dest : it->route_b) nextCompositeB.insert(dest);
+                // Convert sets to vector and assign to composite state
+                compositeState.route_a = vector<string>(combinedRoutesA.begin(), combinedRoutesA.end());
+                compositeState.route_b = vector<string>(combinedRoutesB.begin(), combinedRoutesB.end());
+
+                // Composite state name and attributes
+                compositeState.state = state.state + "/" + route; // Custom logic for naming
+                compositeState.start = false; // Composite states derived here are typically not start states
+                compositeState.finish = state.finish || targetIt->finish; // Finish if either state is a finish state
+
+                // Add the composite state to the temporary container
+                compositeStates.push_back(compositeState);
             }
         }
-
-        if (!nextCompositeA.empty() && find(seenStates.begin(), seenStates.end(), nextCompositeA) == seenStates.end()) {
-            queue.push(nextCompositeA);
-            seenStates.push_back(nextCompositeA);
-        }
-        if (!nextCompositeB.empty() && find(seenStates.begin(), seenStates.end(), nextCompositeB) == seenStates.end()) {
-            queue.push(nextCompositeB);
-            seenStates.push_back(nextCompositeB);
-        }
-
-        newState.route_a.push_back(convertSetToStateName(nextCompositeA));
-        newState.route_b.push_back(convertSetToStateName(nextCompositeB));
-
-        dfa.push_back(newState);
     }
 
-    return dfa;
+    // Append the composite states to the NFA
+    nfa.insert(nfa.end(), compositeStates.begin(), compositeStates.end());
 }
-// implemented by chatGPt
+
 
 
 int main(int argc, char *argv[]) {
