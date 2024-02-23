@@ -214,8 +214,6 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
         }
     }
 
-    // Print the states of the DFA
-    printStates(dfa);
 }
 
 
@@ -227,9 +225,9 @@ int main(int argc, char *argv[]) {
     string filename = argv[1];
     
     vector<StateProps> nfa = readStatesFromFile(filename);
-    cout << "Read " << nfa.size() << " states from the file." << endl;
+    // cout << "Read " << nfa.size() << " states from the file." << endl;
     cout << "This is the NFA" << endl;
-    // printStates(nfa);
+    printStates(nfa);
     convertNFAtoDFA(nfa);
     //vector<StateProps> dfa=convertNFAtoDFA(nfa);
     cout << "This is the DFA" << endl;
