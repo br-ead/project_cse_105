@@ -127,8 +127,8 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
 
     // Add all new states to the DFA
     for (const auto& newState : newStates) {
-        cout << newState.state;
-        dfa.push_back(newState);
+        cout << newStates.state;
+        dfa.push_back(newStates);
     }
 }
 
