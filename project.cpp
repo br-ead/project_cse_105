@@ -89,6 +89,7 @@ string convertSetToStateName(const set<string>& stateSet) {
         }
         stateName += state;
     }
+    cout << "[" + stateName + "]"; 
     return "[" + stateName + "]";
 }
 
