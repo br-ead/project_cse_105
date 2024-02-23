@@ -84,12 +84,14 @@ set<string> findClosure(const vector<StateProps>& nfa, const set<string>& states
 string convertSetToStateName(const set<string>& stateSet) {
     string stateName;
     for (const auto& state : stateSet) {
-        if (!stateName.empty()) 
-        stateName = "[" + stateName + ",";
-        stateName += state + "]" ;
+        if (!stateName.empty()) {
+            stateName += ",";
+        }
+        stateName += state;
     }
-    return stateName;
+    return "[" + stateName + "]";
 }
+
 
 void addStateToDFA(vector<StateProps>& dfa, queue<set<string>>& stateQueue, set<string>& visitedStates, const set<string>& newState, bool isStart, bool isFinish) {
     string stateName = convertSetToStateName(newState);
@@ -108,20 +110,15 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
     vector<StateProps> dfa;
     set<string> visitedStates;
     queue<set<string>> stateQueue;
-    map<string, set<string>> transitionMapA, transitionMapB; // Maps for managing transitions
-
-    // Initialize with the start state
+    map<string, set<string>> transitionMapA, transitionMapB; 
     string initialState = findInitialState(nfa);
     set<string> initialSet = {initialState};
     stateQueue.push(initialSet);
     visitedStates.insert(initialState);
-
     while (!stateQueue.empty()) {
         set<string> currentStateSet = stateQueue.front();
         stateQueue.pop();
         set<string> newStateA, newStateB;
-
-        // Determine if this set is a final state and collect transitions
         bool isFinal = false;
         for (const string& state : currentStateSet) {
             for (const auto& nfaState : nfa) {
@@ -132,23 +129,17 @@ vector<StateProps> convertNFAtoDFA(const vector<StateProps>& nfa) {
                 }
             }
         }
-
-        // Handle transitions for 'a'
         if (!newStateA.empty()) {
             string newStateNameA = convertSetToStateName(newStateA);
             transitionMapA[convertSetToStateName(currentStateSet)].insert(newStateNameA);
             addStateToDFA(dfa, stateQueue, visitedStates, newStateA, false, isFinalState(newStateNameA, nfa));
         }
-
-        // Handle transitions for 'b'
         if (!newStateB.empty()) {
             string newStateNameB = convertSetToStateName(newStateB);
             transitionMapB[convertSetToStateName(currentStateSet)].insert(newStateNameB);
             addStateToDFA(dfa, stateQueue, visitedStates, newStateB, false, isFinalState(newStateNameB, nfa));
         }
     }
-
-    // Update DFA states with transitions from maps
     for (auto& dfaState : dfa) {
         if (transitionMapA.find(dfaState.state) != transitionMapA.end()) {
             for (const auto& transState : transitionMapA[dfaState.state]) {
@@ -200,13 +191,11 @@ int main(int argc, char *argv[]) {
         cout << "Usage: " << argv[0] << " <filename>" << endl;
         return 1;
     }
-
     string filename = argv[1];
-
-
+    
     vector<StateProps> nfa = readStatesFromFile(filename);
-    //cout << "Read " << nfa.size() << " states from the file." << endl;
-    //cout << "This is the NFA" << endl;
+    cout << "Read " << nfa.size() << " states from the file." << endl;
+    cout << "This is the NFA" << endl;
     // printStates(nfa);
     vector<StateProps> dfa=convertNFAtoDFA(nfa);
     cout << "This is the DFA" << endl;
