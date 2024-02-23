@@ -6,6 +6,7 @@
 #include <queue>
 #include <set>
 #include <map>
+#include <algorithm>
 using namespace std;
 
 struct StateProps {
