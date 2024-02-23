@@ -8,7 +8,7 @@
 #include <map>
 #include <algorithm>
 using namespace std;
-
+// I used chatgpt and copilot
 struct StateProps {
     string state;
     bool start;
