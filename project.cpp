@@ -261,7 +261,7 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
 
             // Check if nextState is meaningful before adding to DFA
             if (!nextStateSet.empty() && !isStateInDFA(nextState, dfa)) {
-                StateProps newState = createNewState(nextState, isFinalState(nextStateSet.state, nfa));
+                StateProps newState = createNewState(nextState, isFinalState(nextStateSet, dfa));
                 dfa.push_back(newState);
                 newStates.push(nextState);
             }
