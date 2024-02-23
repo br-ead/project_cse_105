@@ -144,12 +144,11 @@ set<string> computeNextState(const string& currentState, char input, const vecto
     stringstream ss(currentState);
     string state;
     while (getline(ss, state, '/')) {
-        if (state.empty()) continue; // Skip empty states
         for (const auto& nfaState : nfa) {
             if (nfaState.state == state) {
                 const vector<string>& routes = (input == 'a') ? nfaState.route_a : nfaState.route_b;
                 for (const auto& route : routes) {
-                    if (!route.empty() && route != "null") { // Skip adding "null" routes
+                    if (!route.empty() && route != "null") {
                         nextStateSet.insert(route);
                     }
                 }
@@ -158,6 +157,7 @@ set<string> computeNextState(const string& currentState, char input, const vecto
     }
     return nextStateSet;
 }
+
 
 bool isStateInDFA(const string& state, const vector<StateProps>& dfa) {
     // Check for exact match
