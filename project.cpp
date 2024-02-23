@@ -130,7 +130,7 @@ void printStates(const vector<StateProps>& states) {
 
 bool isCompositeFinal(const set<string>& composite, const vector<StateProps>& nfa) {
     for (const string& compState : composite) {
-        for (size_t i = 0; i < nfa.size(); ++i) {
+        for (size_t i = 0; i < dfa.size()+1; ++i) {
             if (nfa[i].state == compState && nfa[i].finish) {
                 return true; // If any of the composite states is a final state in the NFA, return true
             }
