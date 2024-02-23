@@ -186,7 +186,7 @@ StateProps createNewState(const string& stateName, bool isFinal) {
 }
 
 void updateTransitionTable(const string& currentState, char input, const string& nextState, vector<StateProps>& dfa) {
-    for (size_t i = 0; i < dfa.size(); ++i) {
+    for (size_t i = 0; i < nfa.size(); ++i) {
         if (dfa[i].state == currentState) {
             if (input == 'a') {
                 dfa[i].route_a.clear();
