@@ -130,7 +130,7 @@ vector<StateProps> initializeDFA(const vector<StateProps>& nfa, const string& in
     vector<StateProps> dfa;
 
     // Find the start state in the NFA
-    auto it = find_if(nfa.begin(), nfa.end(), & {
+     auto it = find_if(nfa.begin(), nfa.end(), &initialState) {
         return state.state == initialState;
     });
 
