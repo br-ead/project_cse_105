@@ -65,10 +65,9 @@ string findInitialState(const vector<StateProps>& nfa) {
     return "";
 }
 
-
 bool isFinalState(const string& state, const vector<StateProps>& dfa) {
     // Find the state in the DFA
-    auto it = find_if(dfa.begin(), dfa.end(), {
+    auto it = find_if(dfa.begin(), dfa.end(), [&state](const StateProps& s) {
         return s.state == state;
     });
 
@@ -87,7 +86,7 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
         // For each transition of the DFA state
         for (const auto& route : {dfaState.route_a, dfaState.route_b}) {
             // If the transition leads to a new state
-            if (find_if(dfa.begin(), dfa.end(), {
+            if (find_if(dfa.begin(), dfa.end(), [&route](const StateProps& state) {
                 return state.state == route;
             }) == dfa.end()) {
                 // Create the new state
@@ -102,23 +101,6 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
         }
     }
 }
-
-
-bool isFinalState(const string& state, const vector<StateProps>& dfa) {
-    // Find the state in the DFA
-    auto it = find_if(dfa.begin(), dfa.end(), {
-        return s.state == state;
-    });
-
-    // If the state is found and it's a final state, return true
-    if (it != dfa.end() && it->finish) {
-        return true;
-    }
-
-    // Otherwise, return false
-    return false;
-}
-
 
 void determineTransitions(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
     // For each state in the DFA
