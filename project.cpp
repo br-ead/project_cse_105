@@ -77,7 +77,7 @@ bool isFinalState(const string& compositeState, const vector<StateProps>& dfa) {
         for (const auto& dfaState : dfa) {
             //cout << "test2" << endl;
             //cout << dfaState.state;
-            if (/*dfaState.state == state &&*/ dfaState.finish) {
+            if (dfaState.state == state && dfaState.finish) {
                 cout << dfaState.state << " lol " << endl;
                 return true; // Return true if any of the states is a final state
             }
@@ -256,7 +256,7 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
             string nextState = convertSetToStateName(nextStateSet);
 
             // Check if nextState is meaningful before adding to DFA
-            if (!nextStateSet.empty() && !isStateInDFA(nextState, dfa)) {
+            if (/*!nextStateSet.empty() &&*/ !isStateInDFA(nextState, dfa)) {
                 bool finalState = false;
                 for (const string& state : nextStateSet) {
                     if (isFinalState(state, dfa)) {
