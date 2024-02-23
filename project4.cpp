@@ -135,6 +135,38 @@ vector<StateProps> nfaToDFA(const vector<StateProps>& nfa) {
 
     return dfa;
 }
+void printDFA(const vector<StateProps>& dfa) {
+    cout << "DFA States and Transitions:\n";
+    for (const auto& state : dfa) {
+        cout << "State: " << state.state;
+        if (state.start) cout << " (Start State)";
+        if (state.finish) cout << " (Final State)";
+        cout << "\n";
+
+        // Print transitions for 'a'
+        if (!state.route_a.empty()) {
+            cout << "  On 'a' -> ";
+            for (const auto& dest : state.route_a) {
+                cout << dest << " ";
+            }
+            cout << "\n";
+        } else {
+            cout << "  On 'a' -> No Transition\n";
+        }
+
+        // Print transitions for 'b'
+        if (!state.route_b.empty()) {
+            cout << "  On 'b' -> ";
+            for (const auto& dest : state.route_b) {
+                cout << dest << " ";
+            }
+            cout << "\n";
+        } else {
+            cout << "  On 'b' -> No Transition\n";
+        }
+        cout << "\n"; // Add an extra newline for spacing
+    }
+}
 
 int main() {
     // Assuming `filename` is the path to your input file with NFA definitions
