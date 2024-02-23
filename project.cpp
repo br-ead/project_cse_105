@@ -127,7 +127,7 @@ void identifyNewStates(vector<StateProps>& dfa, const vector<StateProps>& nfa) {
 
     // Add all new states to the DFA
     for (const auto& newState : newStates) {
-        court << newState.state
+        cout << newState.state;
         dfa.push_back(newState);
     }
 }
@@ -241,11 +241,11 @@ int main(int argc, char *argv[]) {
 
     vector<StateProps> nfa = readStatesFromFile(filename);
     //cout << "Read " << nfa.size() << " states from the file." << endl;
-    cout << "This is the NFA" << endl;
+    //cout << "This is the NFA" << endl;
     // printStates(nfa);
     vector<StateProps> dfa=convertNFAtoDFA(nfa);
-    cout << "This is the DFA" << endl;
-    printStates(dfa);
+    //cout << "This is the DFA" << endl;
+    //printStates(dfa);
 
     return 0;
 }
