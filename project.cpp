@@ -136,123 +136,86 @@ bool isCompositeFinal(const set<string>& composite, const vector<StateProps>& nf
     return false;
 }
 
-// Function to combine NFA states based on specific criteria for use in NFA to DFA conversion
-void combineNFAStatesForDFA(vector<StateProps>& nfa) {
-    map<string, set<string>> reachabilityMap; // State to reachable states map
-
-    // Initialize direct reachability from routes
-    for (const auto& state : nfa) {
-        for (const string& dest : state.route_a) {
-            if (dest != "null") reachabilityMap[state.state].insert(dest);
-        }
-        for (const string& dest : state.route_b) {
-            if (dest != "null") reachabilityMap[state.state].insert(dest);
+set<string> computeNextState(const string& currentState, char input, const vector<StateProps>& nfa) {
+    set<string> nextStateSet;
+    stringstream ss(currentState);
+    string state;
+    while (getline(ss, state, '/')) {
+        for (const auto& nfaState : nfa) {
+            if (nfaState.state == state) {
+                const vector<string>& routes = (input == 'a') ? nfaState.route_a : nfaState.route_b;
+                nextStateSet.insert(routes.begin(), routes.end());
+            }
         }
     }
+    return nextStateSet;
+}
 
-    // Compute transitive closure for reachability
-    bool changed;
-    do {
-        changed = false;
-        for (auto& [state, reachable] : reachabilityMap) {
-            size_t beforeSize = reachable.size();
-            set<string> newReachable;
-            for (const auto& r : reachable) {
-                newReachable.insert(reachabilityMap[r].begin(), reachabilityMap[r].end());
-            }
-            reachable.insert(newReachable.begin(), newReachable.end());
-            if (beforeSize != reachable.size()) changed = true;
-        }
-    } while (changed);
+bool isStateInDFA(const string& state, const vector<StateProps>& dfa) {
+    return find_if(dfa.begin(), dfa.end(), [&](const StateProps& sp) { return sp.state == state; }) != dfa.end();
+}
 
-    // Generate composite states based on reachability
-    for (auto& [state, reachable] : reachabilityMap) {
-        if (reachable.size() > 1) { // Only consider states with more than one reachable state
-            StateProps compositeState;
-            compositeState.state = state; // Name of composite state is the base state's name
-            for (const auto& r : reachable) {
-                // Add all reachable states' routes to composite state
-                const auto& targetState = *find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == r; });
-                compositeState.route_a.insert(compositeState.route_a.end(), targetState.route_a.begin(), targetState.route_a.end());
-                compositeState.route_b.insert(compositeState.route_b.end(), targetState.route_b.begin(), targetState.route_b.end());
-            }
-            // Remove duplicates
-            sort(compositeState.route_a.begin(), compositeState.route_a.end());
-            compositeState.route_a.erase(unique(compositeState.route_a.begin(), compositeState.route_a.end()), compositeState.route_a.end());
-            sort(compositeState.route_b.begin(), compositeState.route_b.end());
-            compositeState.route_b.erase(unique(compositeState.route_b.begin(), compositeState.route_b.end()), compositeState.route_b.end());
+StateProps createNewState(const string& stateName, bool isFinal) {
+    StateProps newState;
+    newState.state = stateName;
+    newState.start = false; // New states are never start states
+    newState.finish = isFinal;
+    return newState;
+}
 
-            // Determine if composite state is final
-            compositeState.finish = any_of(reachable.begin(), reachable.end(), [&](const string& rs) {
-                return find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == rs && sp.finish; }) != nfa.end();
-            });
-
-            // Add the composite state to NFA
-            nfa.push_back(compositeState);
+void updateTransitionTable(const string& currentState, char input, const string& nextState, vector<StateProps>& dfa) {
+    auto it = find_if(dfa.begin(), dfa.end(), [&](const StateProps& sp) { return sp.state == currentState; });
+    if (it != dfa.end()) {
+        if (input == 'a') {
+            it->route_a.clear();
+            it->route_a.push_back(nextState);
+        } else if (input == 'b') {
+            it->route_b.clear();
+            it->route_b.push_back(nextState);
         }
     }
 }
 
+void convertNFAtoDFA(const vector<StateProps>& nfa) {
+    // Find the initial state of the NFA
+    string initialState = findInitialState(nfa);
 
-vector<StateProps> convertNFAtoDFA(vector<StateProps> nfa) {
-    // Prepare the NFA by combining states as needed.
-    combineNFAStatesForDFA(nfa); // This modifies the `nfa` directly.
+    // Initialize the DFA with the initial state
+    vector<StateProps> dfa = initializeDFA(nfa, initialState);
 
-    vector<StateProps> dfa; // This will store the final DFA states.
-    map<set<string>, string> seenStates; // Maps each unique set of NFA states to a DFA state name.
-    queue<set<string>> toProcess; // Queue to manage sets of NFA states that need to be processed.
+    // Create a queue to hold the new states of the DFA
+    queue<string> newStates;
+    newStates.push(initialState);
 
-    // Initialize with the initial state set.
-    set<string> initialStateSet = {findInitialState(nfa)};
-    toProcess.push(initialStateSet);
-    seenStates[initialStateSet] = convertSetToStateName(initialStateSet);
+    // Process each new state
+    while (!newStates.empty()) {
+        string currentState = newStates.front();
+        newStates.pop();
 
-    while (!toProcess.empty()) {
-        set<string> currentSet = toProcess.front();
-        toProcess.pop();
-        StateProps newState;
-        newState.state = seenStates[currentSet]; // Set the state name based on the seenStates mapping.
+        // For each input symbol...
+        for (char input : {'a', 'b'}) { // assuming 'a' and 'b' are the input symbols
+            // Compute the new state for the current input
+            set<string> nextStateSet = computeNextState(currentState, input, nfa);
 
-        // Determine if the new state is a start or finish state.
-        newState.start = (currentSet.find(findInitialState(nfa)) != currentSet.end());
-        newState.finish = isCompositeFinal(currentSet, nfa);
+            // Convert the set of states to a state name
+            string nextState = convertSetToStateName(nextStateSet);
 
-        // Transition results mapping for route_a and route_b.
-        map<char, set<string>> transitionResults;
+            // If the new state is not already in the DFA...
+            if (!isStateInDFA(nextState, dfa)) {
+                // Add the new state to the DFA
+                dfa.push_back(createNewState(nextState, isCompositeFinal(nextStateSet, nfa)));
 
-        // Collect transitions from current set of NFA states.
-        for (const auto& stateName : currentSet) {
-            auto it = find_if(nfa.begin(), nfa.end(), [&](const StateProps& sp) { return sp.state == stateName; });
-            if (it != nfa.end()) {
-                // Process transitions for route_a and route_b.
-                for (const auto& dest : it->route_a) {
-                    if (dest != "null") transitionResults['a'].insert(dest);
-                }
-                for (const auto& dest : it->route_b) {
-                    if (dest != "null") transitionResults['b'].insert(dest);
-                }
-            }
-        }
-
-        // Process transition results to create new DFA states.
-        for (const auto& [inputChar, resultSet] : transitionResults) {
-            if (resultSet.empty()) continue;
-
-            if (seenStates.find(resultSet) == seenStates.end()) {
-                string newStateName = convertSetToStateName(resultSet);
-                seenStates[resultSet] = newStateName;
-                toProcess.push(resultSet);
+                // Add the new state to the queue
+                newStates.push(nextState);
             }
 
-            // Add transitions to the DFA state.
-            if (inputChar == 'a') newState.route_a.push_back(seenStates[resultSet]);
-            else if (inputChar == 'b') newState.route_b.push_back(seenStates[resultSet]);
+            // Update the transition table for the current state and input
+            updateTransitionTable(currentState, input, nextState, dfa);
         }
-
-        dfa.push_back(newState); // Add the newly created DFA state.
     }
 
-    return dfa;
+    // Print the states of the DFA
+    printStates(dfa);
 }
 
 
