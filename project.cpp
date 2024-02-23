@@ -182,6 +182,36 @@ void updateTransitionTable(const string& currentState, char input, const string&
         }
     }
 }
+void ensureDeathState(vector<StateProps>& dfa) {
+    // Check if the "death" state already exists
+    auto it = find_if(dfa.begin(), dfa.end(), [](const StateProps& sp) { return sp.state == "death"; });
+    if (it == dfa.end()) {
+        // If not, add the "death" state
+        StateProps deathState;
+        deathState.state = "death";
+        deathState.start = false;
+        deathState.finish = false;
+        deathState.route_a.push_back("death");
+        deathState.route_b.push_back("death");
+        dfa.push_back(deathState);
+    }
+}
+void updateStatesForDeath(vector<StateProps>& dfa) {
+    ensureDeathState(dfa); // Ensure the "death" state exists
+
+    for (auto& state : dfa) {
+        // If one of the routes is empty and the other is not, update to include "death"
+        if ((state.route_a.empty() && !state.route_b.empty()) || (!state.route_a.empty() && state.route_b.empty())) {
+            if (state.route_a.empty()) {
+                state.route_a.push_back("death");
+            }
+            if (state.route_b.empty()) {
+                state.route_b.push_back("death");
+            }
+        }
+    }
+}
+
 
 void convertNFAtoDFA(const vector<StateProps>& nfa) {
     string initialState = findInitialState(nfa);
@@ -215,7 +245,8 @@ void convertNFAtoDFA(const vector<StateProps>& nfa) {
     dfa.erase(remove_if(dfa.begin(), dfa.end(), [](const StateProps& state) {
         return state.route_a.empty() && state.route_b.empty();
     }), dfa.end());
-
+    ensureDeathState(dfa);
+    updateStatesForDeath(dfa);
     printStates(dfa);
 }
 
