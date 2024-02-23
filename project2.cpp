@@ -48,7 +48,14 @@ vector<StateProps> readStatesFromFile(const string& filename) {
     }
     return states;
 }
-
+string convertSetToStateName(const set<string>& stateSet) {
+    string stateName;
+    for (const auto& state : stateSet) {
+        if (!stateName.empty()) stateName += "/";
+        stateName += state;
+    }
+    return stateName;
+}
 // Function to find the initial state
 string findInitialState(const vector<StateProps>& nfa) {
     for (const auto& stateNFA : nfa) {
@@ -57,6 +64,20 @@ string findInitialState(const vector<StateProps>& nfa) {
         }
     }
     return "";
+}
+void updateTransitionTable(const string& currentState, char input, const string& nextState, vector<StateProps>& dfa) {
+    for (size_t i = 0; i < dfa.size(); ++i) {
+        if (dfa[i].state == currentState) {
+            if (input == 'a') {
+                dfa[i].route_a.clear();
+                dfa[i].route_a.push_back(nextState);
+            } else if (input == 'b') {
+                dfa[i].route_b.clear();
+                dfa[i].route_b.push_back(nextState);
+            }
+            break; // Assuming state names are unique, we can exit the loop once the state is found and updated
+        }
+    }
 }
 
 // Function to initialize DFA with the initial state
