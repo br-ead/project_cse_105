@@ -161,7 +161,21 @@ set<string> computeNextState(const string& currentState, char input, const vecto
 
 
 bool isStateInDFA(const string& state, const vector<StateProps>& dfa) {
-    return find_if(dfa.begin(), dfa.end(), [&](const StateProps& sp) { return sp.state == state; }) != dfa.end();
+    // Check for exact match
+    if (find_if(dfa.begin(), dfa.end(), [&](const StateProps& sp) { return sp.state == state; }) != dfa.end()) {
+        return true;
+    }
+
+    // Check for permutations of composite states
+    size_t pos = state.find('/');
+    if (pos != string::npos) {
+        string state1 = state.substr(0, pos);
+        string state2 = state.substr(pos + 1);
+        string statePermutation = state2 + '/' + state1;
+        return (find_if(dfa.begin(), dfa.end(), [&](const StateProps& sp) { return sp.state == statePermutation; }) != dfa.end());
+    }
+
+    return false;
 }
 
 StateProps createNewState(const string& stateName, bool isFinal) {
